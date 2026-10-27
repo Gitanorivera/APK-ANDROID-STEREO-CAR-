@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="bg">#0B0C0E</color>
-    <color name="card">#15171B</color>
-    <color name="line">#23262C</color>
-    <color name="active">#1F2228</color>
-    <color name="text">#F2F3F5</color>
-    <color name="text2">#A3A9B2</color>
-    <color name="text3">#8A919B</color>
-    <color name="dock_text">#C9CDD3</color>
-    <color name="accent">#FFB020</color>
-    <color name="bg_main">#0E1013</color>
+    <color name="bg">#07090B</color>
+    <color name="bg_main">#07090B</color>
+    <color name="card">#0F1317</color>
+    <color name="line">#1B2229</color>
+    <color name="active">#11171C</color>
+    <color name="text">#E8ECEF</color>
+    <color name="text2">#AEB7C0</color>
+    <color name="text3">#8B95A0</color>
+    <color name="dock_text">#AEB7C0</color>
+    <color name="ok">#34D399</color>
+    <color name="accent">#22D3EE</color>
 </resources>

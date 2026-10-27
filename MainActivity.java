@@ -1,5 +1,6 @@
 package app.autolauncher;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.NotificationManager;
 import android.bluetooth.BluetoothAdapter;
@@ -40,13 +41,19 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-/** Pantalla de inicio (opción B): reloj, Android Auto, reproductor y barra de apps. */
-public class MainActivity extends Activity {
+/** Pantalla de inicio V2: menú lateral, Inicio (hora, Android Auto, música) y Tablero GPS. */
+public class MainActivity extends Activity implements Trip.Listener {
 
     private static final int REQ_PICK = 10;
+    private static final int REQ_LOCATION = 11;
     private static final long WELCOME_AFTER_OFF_MS = 5 * 60 * 1000L;
     private static final long WELCOME_DURATION_MS = 3500L;
     private static final Locale ES = new Locale("es", "MX");
+    private static final int C_TEXT = 0xFFE8ECEF;
+    private static final int C_TEXT2 = 0xFFAEB7C0;
+    private static final int C_TEXT3 = 0xFF8B95A0;
+    private static final int C_OK = 0xFF34D399;
+    private static final int C_WARN = 0xFFFFB020;
 
     /** La bienvenida se muestra una vez por arranque del sistema/proceso. */
     private static boolean sWelcomeShown;
@@ -58,16 +65,19 @@ public class MainActivity extends Activity {
     private boolean sessionsListening;
     private boolean resumed;
     private boolean receiverRegistered;
+    private boolean boardVisible;
     private long screenOffAt;
     private long durationMs;
 
-    private TextView clock, date, btStatus, wifiStatus, autoSub;
+    private TextView clock, date, autoSub, sideStatus, homeSpeed, homeSpeedUnit, boardClock;
     private TextView title, artist, source, pos, dur, mediaAccess;
-    private View autoButton, coverBox, sourceDot, progressGroup;
-    private ImageView art;
+    private TextView tripDist, tripTime, tripAvg, tripMax, tripAlt, gpsState, gpsGrant;
+    private View autoButton, sourceDot, progressGroup, panelHome, panelBoard;
+    private ImageView art, coverIcon, statusBt, statusWifi, statusGps, sideLogo;
     private ImageButton play;
     private ProgressBar progress;
-    private ImageView homeIcon;
+    private GaugeView gauge;
+    private View navHome, navBoard;
     private View welcome, welcomeBar;
     private TextView welcomeTitle, welcomeDate;
     private ImageView welcomeLogo;
@@ -79,10 +89,12 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         prefs = new Prefs(this);
+        Trip.I.load(prefs);
         sessionManager = (MediaSessionManager) getSystemService(Context.MEDIA_SESSION_SERVICE);
         bindViews();
-        buildDock();
+        buildMenus();
         registerSystemReceiver();
+        assignDefaultApps();
         if (!sWelcomeShown) {
             sWelcomeShown = true;
             showWelcome();
@@ -97,7 +109,13 @@ public class MainActivity extends Activity {
         updateClock();
         updateStatus();
         updateShortcutLabels();
+        loadSideLogo();
         attachMedia();
+        TripService.start(this);
+        Trip.I.addListener(this);
+        onTripUpdate();
+        handler.removeCallbacks(gpsTick);
+        handler.postDelayed(gpsTick, 2000);
         if (prefs.consumePreview()) showWelcome();
     }
 
@@ -106,6 +124,8 @@ public class MainActivity extends Activity {
         super.onPause();
         resumed = false;
         handler.removeCallbacks(progressTick);
+        handler.removeCallbacks(gpsTick);
+        Trip.I.removeListener(this);
         detachMedia();
     }
 
@@ -121,8 +141,9 @@ public class MainActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        // Es la pantalla de inicio: "atrás" no la cierra.
+        // Es la pantalla de inicio: "atrás" solo cierra la bienvenida o regresa del tablero.
         if (welcome.getVisibility() == View.VISIBLE) hideWelcome();
+        else if (boardVisible) showBoard(false);
     }
 
     // ---------------------------------------------------------------- vistas
@@ -130,11 +151,17 @@ public class MainActivity extends Activity {
     private void bindViews() {
         clock = findViewById(R.id.clock);
         date = findViewById(R.id.date);
-        btStatus = findViewById(R.id.bt_status);
-        wifiStatus = findViewById(R.id.wifi_status);
+        boardClock = findViewById(R.id.board_clock);
+        statusBt = findViewById(R.id.status_bt);
+        statusWifi = findViewById(R.id.status_wifi);
+        statusGps = findViewById(R.id.status_gps);
+        sideStatus = findViewById(R.id.side_status);
+        sideLogo = findViewById(R.id.side_logo);
         autoButton = findViewById(R.id.auto_button);
         autoSub = findViewById(R.id.auto_sub);
-        coverBox = findViewById(R.id.cover_box);
+        homeSpeed = findViewById(R.id.home_speed);
+        homeSpeedUnit = findViewById(R.id.home_speed_unit);
+        coverIcon = findViewById(R.id.cover_icon);
         art = findViewById(R.id.art);
         art.setClipToOutline(true);
         source = findViewById(R.id.source);
@@ -147,6 +174,16 @@ public class MainActivity extends Activity {
         pos = findViewById(R.id.pos);
         dur = findViewById(R.id.dur);
         play = findViewById(R.id.play);
+        panelHome = findViewById(R.id.panel_home);
+        panelBoard = findViewById(R.id.panel_board);
+        gauge = findViewById(R.id.gauge);
+        tripDist = findViewById(R.id.trip_dist);
+        tripTime = findViewById(R.id.trip_time);
+        tripAvg = findViewById(R.id.trip_avg);
+        tripMax = findViewById(R.id.trip_max);
+        tripAlt = findViewById(R.id.trip_alt);
+        gpsState = findViewById(R.id.gps_state);
+        gpsGrant = findViewById(R.id.gps_grant);
         welcome = findViewById(R.id.welcome);
         welcomeBar = findViewById(R.id.welcome_bar);
         welcomeTitle = findViewById(R.id.welcome_title);
@@ -154,34 +191,46 @@ public class MainActivity extends Activity {
         welcomeLogo = findViewById(R.id.welcome_logo);
 
         autoButton.setOnClickListener(v -> openSlot(Slot.AUTO));
-        autoButton.setOnLongClickListener(v -> {
-            pickFor(Slot.AUTO);
-            return true;
-        });
+        autoButton.setOnLongClickListener(longPick(Slot.AUTO));
         findViewById(R.id.prev).setOnClickListener(v -> onPrev());
         findViewById(R.id.next).setOnClickListener(v -> onNext());
         play.setOnClickListener(v -> onPlayPause());
         mediaAccess.setOnClickListener(v -> openNotificationAccess());
         welcome.setOnClickListener(v -> hideWelcome());
+        findViewById(R.id.speed_row).setOnClickListener(v -> {
+            if (!TripService.hasPermission(this)) requestLocation();
+            else showBoard(true);
+        });
+        gpsGrant.setOnClickListener(v -> requestLocation());
+        findViewById(R.id.trip_reset).setOnClickListener(v -> {
+            Trip.I.reset(prefs);
+            Toast.makeText(this, "Viaje reiniciado", Toast.LENGTH_SHORT).show();
+        });
     }
 
-    /** Barra lateral (Inicio, Android Auto, Música, Teléfono, Apps, Ajustes) y accesos rápidos. */
-    private void buildDock() {
+    private void buildMenus() {
         LinearLayout side = findViewById(R.id.sidebar);
-        addSideItem(side, R.drawable.ic_home, R.string.dock_home, v -> hideWelcome(), null, true);
-        addSideItem(side, R.drawable.ic_car, R.string.dock_auto, v -> openSlot(Slot.AUTO), longPick(Slot.AUTO), false);
-        addSideItem(side, R.drawable.ic_music, R.string.dock_music, v -> openSlot(Slot.MUSIC), longPick(Slot.MUSIC), false);
-        addSideItem(side, R.drawable.ic_phone, R.string.dock_phone, v -> openSlot(Slot.PHONE), longPick(Slot.PHONE), false);
-        addSideItem(side, R.drawable.ic_apps, R.string.dock_apps,
-                v -> startActivity(new Intent(this, AppsActivity.class)), null, false);
-        findViewById(R.id.side_settings).setOnClickListener(
-                v -> startActivity(new Intent(this, SettingsActivity.class)));
+        navHome = addNavItem(side, R.drawable.ic_home, R.string.nav_home, v -> {
+            hideWelcome();
+            showBoard(false);
+        }, null);
+        navBoard = addNavItem(side, R.drawable.ic_gauge, R.string.nav_board, v -> {
+            showBoard(true);
+            if (!TripService.hasPermission(this)) requestLocation();
+        }, null);
+        addNavItem(side, R.drawable.ic_car, R.string.nav_auto, v -> openSlot(Slot.AUTO), longPick(Slot.AUTO));
+        addNavItem(side, R.drawable.ic_music, R.string.nav_music, v -> openSlot(Slot.MUSIC), longPick(Slot.MUSIC));
+        addNavItem(side, R.drawable.ic_phone, R.string.nav_phone, v -> openSlot(Slot.PHONE), longPick(Slot.PHONE));
+        addNavItem(side, R.drawable.ic_apps, R.string.nav_apps,
+                v -> startActivity(new Intent(this, AppsActivity.class)), null);
+        addNavItem(side, R.drawable.ic_settings, R.string.nav_settings,
+                v -> startActivity(new Intent(this, SettingsActivity.class)), null);
 
         LinearLayout quick = findViewById(R.id.quick);
-        addQuickItem(quick, R.drawable.ic_camera, R.string.dock_camera, Slot.CAMERA);
-        addQuickItem(quick, R.drawable.ic_phone, R.string.dock_phone, Slot.PHONE);
-        addQuickItem(quick, R.drawable.ic_bt, R.string.dock_bt, Slot.BLUETOOTH);
-        addQuickItem(quick, R.drawable.ic_eq, R.string.dock_eq, Slot.EQ);
+        addQuickItem(quick, R.drawable.ic_radio, R.string.q_radio, Slot.RADIO);
+        addQuickItem(quick, R.drawable.ic_bt, R.string.q_bt, Slot.BLUETOOTH);
+        addQuickItem(quick, R.drawable.ic_eq, R.string.q_eq, Slot.EQ);
+        addQuickItem(quick, R.drawable.ic_vehicle, R.string.q_vehicle, Slot.VEHICLE);
     }
 
     private View.OnLongClickListener longPick(Slot slot) {
@@ -191,19 +240,16 @@ public class MainActivity extends Activity {
         };
     }
 
-    private void addSideItem(LinearLayout side, int icon, int label, View.OnClickListener click,
-                             View.OnLongClickListener longClick, boolean active) {
+    private View addNavItem(LinearLayout side, int icon, int label, View.OnClickListener click,
+                            View.OnLongClickListener longClick) {
         View item = LayoutInflater.from(this).inflate(R.layout.side_item, side, false);
-        ImageView ic = item.findViewById(R.id.icon);
-        ic.setImageResource(icon);
+        ((ImageView) item.findViewById(R.id.icon)).setImageResource(icon);
+        ((TextView) item.findViewById(R.id.label)).setText(label);
         item.setContentDescription(getString(label));
         item.setOnClickListener(click);
         if (longClick != null) item.setOnLongClickListener(longClick);
-        if (active) {
-            item.setBackgroundResource(R.drawable.bg_side_active);
-            homeIcon = ic;
-        }
         side.addView(item);
+        return item;
     }
 
     private void addQuickItem(LinearLayout quick, int icon, int label, Slot slot) {
@@ -215,7 +261,7 @@ public class MainActivity extends Activity {
         item.setOnLongClickListener(longPick(slot));
         if (quick.getChildCount() > 0) {
             LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) item.getLayoutParams();
-            lp.setMarginStart(dp(16));
+            lp.setMarginStart(dp(12));
             item.setLayoutParams(lp);
         }
         quick.addView(item);
@@ -225,15 +271,53 @@ public class MainActivity extends Activity {
         return Math.round(v * getResources().getDisplayMetrics().density);
     }
 
+    private void showBoard(boolean board) {
+        boardVisible = board;
+        panelHome.setVisibility(board ? View.GONE : View.VISIBLE);
+        panelBoard.setVisibility(board ? View.VISIBLE : View.GONE);
+        applyAccent();
+        onTripUpdate();
+    }
+
+    private void styleNav(View item, boolean active, int accent) {
+        if (item == null) return;
+        item.setBackgroundResource(active ? R.drawable.bg_side_active : R.drawable.bg_side_item);
+        ((ImageView) item.findViewById(R.id.icon)).setImageTintList(ColorStateList.valueOf(active ? accent : C_TEXT2));
+        ((TextView) item.findViewById(R.id.label)).setTextColor(active ? accent : C_TEXT2);
+    }
+
     private void applyAccent() {
         int a = prefs.accent();
         ColorStateList csl = ColorStateList.valueOf(a);
         autoButton.setBackgroundTintList(csl);
-        coverBox.setBackgroundTintList(csl);
+        coverIcon.setImageTintList(csl);
         sourceDot.setBackgroundTintList(csl);
         welcomeBar.setBackgroundTintList(csl);
         progress.setProgressTintList(csl);
-        if (homeIcon != null) homeIcon.setImageTintList(csl);
+        gauge.setAccent(a);
+        styleNav(navHome, !boardVisible, a);
+        styleNav(navBoard, boardVisible, a);
+    }
+
+    private void loadSideLogo() {
+        Bitmap logo = LogoStore.load(this);
+        if (logo != null) {
+            sideLogo.setImageBitmap(logo);
+            sideLogo.setVisibility(View.VISIBLE);
+        } else {
+            sideLogo.setImageDrawable(null);
+            sideLogo.setVisibility(View.GONE);
+        }
+    }
+
+    private void assignDefaultApps() {
+        final Context app = getApplicationContext();
+        new Thread(() -> {
+            Defaults.assignMissing(app, prefs);
+            runOnUiThread(() -> {
+                if (!isFinishing() && !isDestroyed()) updateShortcutLabels();
+            });
+        }, "defaults").start();
     }
 
     // ---------------------------------------------------------------- reloj y estado
@@ -241,43 +325,35 @@ public class MainActivity extends Activity {
     private void updateClock() {
         Date now = new Date();
         boolean is24 = android.text.format.DateFormat.is24HourFormat(this);
-        clock.setText(new SimpleDateFormat(is24 ? "HH:mm" : "h:mm", ES).format(now));
-        date.setText(capitalize(new SimpleDateFormat("EEEE d 'de' MMMM", ES).format(now)));
-    }
-
-    private static String capitalize(String s) {
-        if (s == null || s.isEmpty()) return "";
-        return s.substring(0, 1).toUpperCase(ES) + s.substring(1);
+        String time = new SimpleDateFormat(is24 ? "HH:mm" : "h:mm", ES).format(now);
+        clock.setText(time);
+        boardClock.setText(time);
+        date.setText(new SimpleDateFormat("EEEE d 'de' MMMM", ES).format(now).toUpperCase(ES));
     }
 
     private void updateStatus() {
-        // Bluetooth
+        boolean btOn = false;
+        boolean btKnown = true;
         try {
             BluetoothAdapter ad = BluetoothAdapter.getDefaultAdapter();
-            if (ad == null) {
-                btStatus.setVisibility(View.GONE);
-            } else {
-                boolean on = ad.isEnabled();
-                btStatus.setVisibility(View.VISIBLE);
-                btStatus.setText(on ? R.string.bluetooth : R.string.bluetooth_off);
-                btStatus.setAlpha(on ? 1f : 0.6f);
-            }
+            if (ad == null) btKnown = false;
+            else btOn = ad.isEnabled();
         } catch (SecurityException e) {
-            btStatus.setVisibility(View.GONE);
+            btKnown = false;
         }
-        // Wi-Fi
+        statusBt.setVisibility(btKnown ? View.VISIBLE : View.GONE);
+        statusBt.setAlpha(btOn ? 1f : 0.35f);
+        sideStatus.setVisibility(btKnown ? View.VISIBLE : View.GONE);
+        sideStatus.setText(btOn ? R.string.bt_on_status : R.string.bt_off_status);
+        sideStatus.setTextColor(btOn ? C_OK : C_TEXT3);
+        sideStatus.setCompoundDrawableTintList(ColorStateList.valueOf(btOn ? C_OK : C_TEXT3));
+
         try {
             WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-            if (wm == null) {
-                wifiStatus.setVisibility(View.GONE);
-            } else {
-                boolean on = wm.isWifiEnabled();
-                wifiStatus.setVisibility(View.VISIBLE);
-                wifiStatus.setText(on ? R.string.wifi : R.string.wifi_off);
-                wifiStatus.setAlpha(on ? 1f : 0.6f);
-            }
+            statusWifi.setVisibility(wm == null ? View.GONE : View.VISIBLE);
+            statusWifi.setAlpha(wm != null && wm.isWifiEnabled() ? 1f : 0.35f);
         } catch (SecurityException e) {
-            wifiStatus.setVisibility(View.GONE);
+            statusWifi.setVisibility(View.GONE);
         }
     }
 
@@ -322,6 +398,69 @@ public class MainActivity extends Activity {
         receiverRegistered = true;
     }
 
+    // ---------------------------------------------------------------- GPS y tablero
+
+    private void requestLocation() {
+        requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION}, REQ_LOCATION);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results) {
+        super.onRequestPermissionsResult(requestCode, permissions, results);
+        if (requestCode != REQ_LOCATION) return;
+        if (TripService.hasPermission(this)) {
+            TripService.start(this);
+            showBoard(true);
+        }
+        onTripUpdate();
+    }
+
+    /** Revisa cada 2 s si se perdió la señal (sin señal no llegan actualizaciones). */
+    private final Runnable gpsTick = new Runnable() {
+        @Override
+        public void run() {
+            onTripUpdate();
+            if (resumed) handler.postDelayed(this, 2000);
+        }
+    };
+
+    @Override
+    public void onTripUpdate() {
+        Trip t = Trip.I;
+        boolean perm = TripService.hasPermission(this);
+        boolean fix = perm && t.hasFix();
+
+        statusGps.setAlpha(fix ? 1f : 0.35f);
+        if (!perm) {
+            homeSpeed.setText(R.string.tap_gps);
+            homeSpeed.setTextSize(14);
+            homeSpeedUnit.setVisibility(View.GONE);
+        } else {
+            homeSpeed.setText(fix ? String.valueOf(Math.round(t.speedKmh)) : "--");
+            homeSpeed.setTextSize(22);
+            homeSpeedUnit.setVisibility(View.VISIBLE);
+        }
+        if (!boardVisible) return;
+
+        String sub = !perm ? "GPS SIN PERMISO" : !fix ? "BUSCANDO SEÑAL"
+                : t.hasBearing ? Trip.heading(t.bearing) : "";
+        gauge.setSpeed(fix ? t.speedKmh : -1f, sub);
+        gauge.setContentDescription(fix ? "Velocidad " + Math.round(t.speedKmh) + " kilómetros por hora" : sub);
+
+        tripDist.setText(String.format(Locale.US, "%.1f", t.distanceM / 1000.0));
+        long min = t.movingMs / 60_000;
+        tripTime.setText(String.format(Locale.US, "Tiempo: %02d:%02d h", min / 60, min % 60));
+        tripAvg.setText(String.valueOf(Math.round(t.avgKmh())));
+        tripMax.setText(String.valueOf(Math.round(t.maxKmh)));
+        tripAlt.setText(fix && t.hasAltitude ? String.format(Locale.US, "%,d", Math.round(t.altitudeM)) : "--");
+
+        int dot = !perm ? C_TEXT3 : fix ? C_OK : C_WARN;
+        gpsState.setText(!perm ? R.string.gps_off : fix ? R.string.gps_ok : R.string.gps_search);
+        gpsState.setCompoundDrawableTintList(ColorStateList.valueOf(dot));
+        gpsGrant.setVisibility(perm ? View.GONE : View.VISIBLE);
+    }
+
     // ---------------------------------------------------------------- bienvenida
 
     private final Runnable hideWelcomeRunnable = this::hideWelcome;
@@ -361,7 +500,6 @@ public class MainActivity extends Activity {
     private void openSlot(Slot s) {
         String pkg = prefs.shortcut(s);
         if (pkg == null && s == Slot.BLUETOOTH) {
-            // Sin app asignada: abre los ajustes de Bluetooth del sistema.
             try {
                 startActivity(new Intent(Settings.ACTION_BLUETOOTH_SETTINGS));
                 return;
@@ -519,9 +657,10 @@ public class MainActivity extends Activity {
     private void renderMedia() {
         handler.removeCallbacks(progressTick);
         if (controller == null) {
-            title.setText(R.string.no_media_title);
+            boolean zlink = prefs.shortcut(Slot.AUTO) != null;
+            title.setText(zlink ? getString(R.string.zlink_title) : getString(R.string.no_media_title));
             artist.setText(R.string.no_media_sub);
-            source.setText(R.string.source_none);
+            source.setText(zlink ? "ANDROID AUTO" : getString(R.string.source_none).toUpperCase(ES));
             art.setImageDrawable(null);
             art.setVisibility(View.GONE);
             progressGroup.setVisibility(View.INVISIBLE);
@@ -548,7 +687,8 @@ public class MainActivity extends Activity {
         artist.setText(TextUtils.isEmpty(a) ? "" : a);
 
         CharSequence app = Launch.label(this, controller.getPackageName());
-        source.setText(app == null ? getString(R.string.source_none) : getString(R.string.source_fmt, app));
+        source.setText(app == null ? getString(R.string.source_none).toUpperCase(ES)
+                : app.toString().toUpperCase(ES));
 
         if (bmp != null) {
             art.setImageBitmap(bmp);
@@ -637,11 +777,23 @@ public class MainActivity extends Activity {
         }
     }
 
-    /** Respaldo: misma señal que los botones del volante (funciona con ZLink). */
+    /**
+     * Sin información de la canción (caso ZLink): manda el botón multimedia directo a la app
+     * de Android Auto elegida. Si no hay, usa la vía estándar del sistema.
+     */
     private void sendMediaKey(int code) {
+        String target = prefs.shortcut(Slot.AUTO);
+        long t = SystemClock.uptimeMillis();
+        if (prefs.mediaDirect() && target != null && Launch.label(this, target) != null) {
+            for (int action : new int[]{KeyEvent.ACTION_DOWN, KeyEvent.ACTION_UP}) {
+                Intent i = new Intent(Intent.ACTION_MEDIA_BUTTON).setPackage(target);
+                i.putExtra(Intent.EXTRA_KEY_EVENT, new KeyEvent(t, t, action, code, 0));
+                sendBroadcast(i);
+            }
+            return;
+        }
         AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         if (am == null) return;
-        long t = SystemClock.uptimeMillis();
         am.dispatchMediaKeyEvent(new KeyEvent(t, t, KeyEvent.ACTION_DOWN, code, 0));
         am.dispatchMediaKeyEvent(new KeyEvent(t, t, KeyEvent.ACTION_UP, code, 0));
     }

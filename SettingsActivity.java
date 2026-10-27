@@ -204,9 +204,15 @@ public class SettingsActivity extends Activity {
                 i.putExtra(AppsActivity.EXTRA_PICK_SLOT, s.name());
                 startActivityForResult(i, REQ_PICK);
             }));
-            row.addView(button("Quitar", v -> {
+            row.addView(button("Automático", v -> {
                 prefs.setShortcut(s, null);
-                refresh();
+                final android.content.Context app = getApplicationContext();
+                new Thread(() -> {
+                    Defaults.assignMissing(app, prefs);
+                    runOnUiThread(() -> {
+                        if (!isFinishing() && !isDestroyed()) refresh();
+                    });
+                }, "defaults").start();
             }), spaced());
             content.addView(row, topMargin(8));
         }
@@ -216,6 +222,14 @@ public class SettingsActivity extends Activity {
         section("Canción en pantalla");
         hint("Android pide el permiso \"Acceso a notificaciones\" para leer qué canción suena. "
                 + "Esta app no lee tus notificaciones y no tiene internet.");
+        Switch direct = new Switch(this);
+        direct.setText("Mandar los botones de música directo a ZLink");
+        direct.setTextColor(C_TEXT);
+        direct.setTextSize(TypedValue.COMPLEX_UNIT_SP, 17);
+        direct.setChecked(prefs.mediaDirect());
+        direct.setOnCheckedChangeListener((b, on) -> prefs.setMediaDirect(on));
+        content.addView(direct, new LinearLayout.LayoutParams(dp(520), dp(56)));
+        hint("Si los botones de la pantalla no cambian la canción, prueba apagando o encendiendo esta opción.");
         mediaStatus = text("", 15, C_TEXT2, false);
         content.addView(mediaStatus, topMargin(8));
         LinearLayout row = hRow();
@@ -239,7 +253,8 @@ public class SettingsActivity extends Activity {
     private void buildPrivacy() {
         section("Privacidad");
         hint("Esta app no tiene permiso de internet: nada sale de la pantalla. "
-                + "Tu nombre, logotipo y accesos se guardan solo aquí y no se respaldan.");
+                + "Tu nombre, logotipo, accesos y los totales del viaje se guardan solo aquí y no se respaldan. "
+                + "El GPS se usa solo para velocidad, distancia y altitud; no se guarda ninguna ubicación.");
         TextView wipe = button("Borrar mis datos (para vender el auto)", v -> confirmWipe());
         wipe.setTextColor(C_DANGER);
         content.addView(wipe, topMargin(16));
@@ -281,11 +296,12 @@ public class SettingsActivity extends Activity {
     private void confirmWipe() {
         new AlertDialog.Builder(this)
                 .setTitle("¿Borrar tus datos?")
-                .setMessage("Se borran el nombre del saludo, el logotipo, el color y los accesos directos. "
+                .setMessage("Se borran el nombre del saludo, el logotipo, el color, los accesos directos y los datos del viaje. "
                         + "No se puede deshacer.")
                 .setNegativeButton("Cancelar", null)
                 .setPositiveButton("Borrar", (d, w) -> {
                     prefs.clearAll();
+                    Trip.I.reset(prefs);
                     LogoStore.delete(this);
                     nameInput.setText("");
                     refresh();

@@ -5,9 +5,10 @@ enum Slot {
     AUTO("Android Auto"),
     MUSIC("Música"),
     PHONE("Teléfono"),
-    CAMERA("Cámara"),
+    RADIO("Radio"),
+    BLUETOOTH("Bluetooth"),
     EQ("Ecualizador"),
-    BLUETOOTH("Bluetooth");
+    VEHICLE("Vehículo");
 
     final String label;
 

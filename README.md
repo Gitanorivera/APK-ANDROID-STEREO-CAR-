@@ -2,17 +2,16 @@
 
 Launcher para pantallas Android de auto a 1024×600, con el diseño final (opción A con reloj grande y el botón de Android Auto de la opción B).
 
-## Qué hace
+## Qué hace (versión 2)
 
-- **Barra lateral:** Inicio, Android Auto, Música, Teléfono, Apps y, abajo, Ajustes.
-- **Reloj grande** con la fecha en español, y el estado de Bluetooth y Wi-Fi.
-- **Botón de Android Auto:** bloque grande de color que abre la app que elijas (por ejemplo, ZLink).
-- **Reproductor:** muestra título, artista y tiempo de lo que suena. Los botones de anterior, pausa y siguiente funcionan aunque la pantalla no reciba la información de la canción.
-- **Accesos rápidos:** Cámara, Teléfono, Bluetooth y Ecualizador. Si no le asignas app, Bluetooth abre los ajustes de Bluetooth.
-- **Bienvenida al encender:** saludo según la hora, con nombre **opcional y editable** y tu propio logotipo.
-- **Borrar mis datos:** quita nombre, logotipo y accesos con un toque, por ejemplo antes de vender el auto.
-
-Para cambiar la app de cualquier botón, mantenlo presionado.
+- **Menú lateral:** INICIO, TABLERO, ANDROID AUTO, MÚSICA, TELÉFONO, APPS y AJUSTES.
+- **Inicio:** hora grande con fecha, velocidad GPS, botón de Android Auto y reproductor.
+- **Accesos rápidos:** RADIO, BLUETOOTH, ECUALIZADOR y VEHÍCULO.
+- **Tablero:** velocímetro, viaje actual (distancia y tiempo), velocidad promedio y máxima, y altitud. Todo sale del GPS del estéreo.
+- **Botones asignados solos:** el launcher busca ZLINK, Musica Local, Bluetooth, Radio, Sound Effects y Configuración del vehículo. Para cambiar la app de un botón, mantenlo presionado.
+- **Música con ZLink:** si ZLink no publica la canción, los botones mandan la señal directo a ZLink. Se puede cambiar en Ajustes.
+- **Bienvenida al encender:** nombre opcional y editable, con tu logotipo.
+- **Borrar mis datos:** quita nombre, logotipo, accesos y totales del viaje, por ejemplo antes de vender el auto.
 
 ## Seguridad y privacidad
 
@@ -20,7 +19,7 @@ Para cambiar la app de cualquier botón, mantenlo presionado.
 |---|---|
 | Internet | **Sin permiso de internet**, bloqueado de forma explícita en el manifiesto. La app no puede enviar nada fuera de la pantalla. |
 | Dependencias | **Ninguna librería de terceros.** Solo usa el código de Android, así que no hay código ajeno escondido. |
-| Permisos | Solo `ACCESS_WIFI_STATE` y `BLUETOOTH` (Android 11 o anterior), para mostrar si están encendidos. Ambos son permisos normales. |
+| Permisos | `ACCESS_WIFI_STATE` y `BLUETOOTH`, para mostrar si están encendidos. **Ubicación (GPS)**, para velocidad, distancia y altitud: no se guarda ninguna coordenada, solo los totales del viaje. Un servicio con aviso fijo sigue midiendo el viaje mientras usas ZLink. |
 | Acceso a notificaciones | Android lo exige para leer qué canción suena. El servicio está vacío: **no lee ni guarda notificaciones**. |
 | Componentes | Solo la pantalla de inicio está abierta al sistema, porque así funciona un launcher. Ajustes y el cajón de apps son internos. El servicio de música solo acepta conexiones del sistema. |
 | Datos | Se guardan en la memoria privada de la app y **sin respaldo** (`allowBackup=false`). |

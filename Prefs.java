@@ -8,7 +8,7 @@ import java.util.regex.Pattern;
 /** Ajustes guardados solo en la memoria privada de la app (sin respaldo en la nube). */
 final class Prefs {
 
-    static final int[] ACCENTS = {0xFFFFB020, 0xFF3DDC97, 0xFF5AB0FF, 0xFFFF7A59};
+    static final int[] ACCENTS = {0xFF22D3EE, 0xFF34D399, 0xFFFFB020, 0xFF5AB0FF};
     static final int MAX_NAME = 30;
 
     // Letras (incluye acentos y ñ), espacios, punto, apóstrofo y guion.
@@ -76,6 +76,33 @@ final class Prefs {
         if (!sp.getBoolean(K_PREVIEW, false)) return false;
         sp.edit().remove(K_PREVIEW).apply();
         return true;
+    }
+
+    /** Botones de música: mandar directo a ZLink (true) o por la vía estándar del sistema. */
+    boolean mediaDirect() {
+        return sp.getBoolean("media_direct", true);
+    }
+
+    void setMediaDirect(boolean on) {
+        sp.edit().putBoolean("media_direct", on).apply();
+    }
+
+    // Totales del viaje (sin coordenadas: solo distancia, tiempo y velocidad máxima).
+    float tripDistanceM() {
+        return sp.getFloat("trip_dist", 0f);
+    }
+
+    long tripMovingMs() {
+        return sp.getLong("trip_ms", 0L);
+    }
+
+    float tripMaxKmh() {
+        return sp.getFloat("trip_max", 0f);
+    }
+
+    void saveTrip(float distanceM, long movingMs, float maxKmh) {
+        sp.edit().putFloat("trip_dist", distanceM).putLong("trip_ms", movingMs)
+                .putFloat("trip_max", maxKmh).apply();
     }
 
     /** Borra todo: nombre, colores, accesos directos. */
