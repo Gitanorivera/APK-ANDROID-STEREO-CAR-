@@ -12,15 +12,69 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Validar el Gradle wrapper
         uses: gradle/actions/wrapper-validation@v4
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
+
+      - name: Acomodar archivos en sus carpetas
+        run: |
+          set -e
+          M=app/src/main
+          R=$M/res
+          mkdir -p $M/java/app/autolauncher $R/drawable $R/layout $R/values $R/mipmap-anydpi-v26 gradle/wrapper
+          [ -f gradle-wrapper.jar ] && mv gradle-wrapper.jar gradle-wrapper.properties gradle/wrapper/
+          [ -f AndroidManifest.xml ] && mv AndroidManifest.xml $M/
+          [ -f proguard-rules.pro ] && mv proguard-rules.pro app/
+          for f in *.java; do [ -e "$f" ] && mv "$f" $M/java/app/autolauncher/; done
+          for f in activity_*.xml app_item.xml side_item.xml quick_item.xml dock_item.xml; do [ -e "$f" ] && mv "$f" $R/layout/; done
+          for f in colors.xml strings.xml themes.xml; do [ -e "$f" ] && mv "$f" $R/values/; done
+          [ -f ic_launcher.xml ] && mv ic_launcher.xml $R/mipmap-anydpi-v26/
+          for f in bg_*.xml ic_*.xml progress_track.xml; do [ -e "$f" ] && mv "$f" $R/drawable/; done
+
+          cat > build.gradle <<'EOF'
+          plugins {
+              id 'com.android.application' version '8.7.3' apply false
+          }
+          EOF
+
+          cat > app/build.gradle <<'EOF'
+          plugins {
+              id 'com.android.application'
+          }
+          android {
+              namespace 'app.autolauncher'
+              compileSdk 34
+              defaultConfig {
+                  applicationId 'app.autolauncher'
+                  minSdk 26
+                  targetSdk 34
+                  versionCode 1
+                  versionName '1.0'
+              }
+              buildTypes {
+                  release {
+                      minifyEnabled true
+                      shrinkResources true
+                      proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+                      signingConfig signingConfigs.debug
+                  }
+              }
+              compileOptions {
+                  sourceCompatibility JavaVersion.VERSION_17
+                  targetCompatibility JavaVersion.VERSION_17
+              }
+              lint {
+                  checkReleaseBuilds false
+              }
+          }
+          EOF
+          find app gradle -type f | sort
 
       - name: Compilar APK de release
         run: |
