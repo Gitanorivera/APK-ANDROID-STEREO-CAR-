@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Inicio Auto</string>
+    <string name="listener_label">Inicio Auto · canción en pantalla</string>
+    <string name="bluetooth">Bluetooth</string>
+    <string name="bluetooth_off">Bluetooth apagado</string>
+    <string name="wifi">Wi-Fi</string>
+    <string name="wifi_off">Wi-Fi apagado</string>
+    <string name="auto_title">Android Auto</string>
+    <string name="auto_sub_fmt">Toca para abrir %1$s</string>
+    <string name="auto_sub_unset">Toca para elegir la app</string>
+    <string name="no_media_title">Sin reproducción</string>
+    <string name="no_media_sub">Los botones controlan la música activa</string>
+    <string name="media_access_button">Permitir mostrar la canción</string>
+    <string name="unknown_title">Reproduciendo</string>
+    <string name="source_fmt">Desde %1$s</string>
+    <string name="source_none">Música</string>
+    <string name="cover">Portada del álbum</string>
+    <string name="prev">Anterior</string>
+    <string name="play_pause">Reproducir o pausar</string>
+    <string name="next">Siguiente</string>
+    <string name="good_morning">Buenos días</string>
+    <string name="good_afternoon">Buenas tardes</string>
+    <string name="good_evening">Buenas noches</string>
+    <string name="greeting_fmt">%1$s, %2$s</string>
+    <string name="welcome_sub">Todo listo para el camino</string>
+    <string name="welcome_tap">Toca para continuar</string>
+    <string name="logo">Logotipo</string>
+    <string name="dock_home">Inicio</string>
+    <string name="dock_music">Música</string>
+    <string name="dock_phone">Teléfono</string>
+    <string name="dock_camera">Cámara</string>
+    <string name="dock_eq">Ecualizador</string>
+    <string name="dock_apps">Apps</string>
+    <string name="dock_settings">Ajustes</string>
+    <string name="dock_auto">Android Auto</string>
+    <string name="dock_bt">Bluetooth</string>
+    <string name="app_missing">Esa app no está disponible. Elige otra.</string>
+    <string name="all_apps">Todas las apps</string>
+    <string name="pick_for">Elige la app para: %1$s</string>
+    <string name="back">Volver</string>
+</resources>
