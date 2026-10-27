@@ -31,21 +31,27 @@ Launcher para pantallas Android de auto a 1024×600, con el diseño final (opci�
 
 ## Cómo compilar
 
-### Opción 1: Android Studio (recomendada)
+Cada cambio que llega a `main` se compila solo en GitHub Actions ("Compilar APK").
+Para descargar el APK: pestaña **Actions** → la compilación más reciente en verde → **Artifacts** → **InicioAuto-apk**.
 
-1. Instala [Android Studio](https://developer.android.com/studio).
-2. Ve a *File → Open* y elige esta carpeta. Espera a que termine "Gradle sync".
-3. Ve a *Build → Generate App Bundles or APKs → Build APK(s)*. En versiones anteriores el menú es *Build → Build Bundle(s) / APK(s) → Build APK(s)*.
-4. Para la versión release, ejecuta en la terminal de Android Studio: `./gradlew assembleRelease`.
-5. El APK queda en `app/build/outputs/apk/release/app-release.apk`.
+También se puede abrir la carpeta en Android Studio y compilar con `./gradlew assembleRelease`.
 
-### Opción 2: GitHub, sin instalar nada
+## Estructura
 
-1. Sube esta carpeta a un repositorio **privado** de GitHub.
-2. En la pestaña *Actions*, ejecuta "Compilar APK".
-3. Cuando termine, descarga el artefacto **InicioAuto-apk**.
-
-Cada compilación en GitHub usa una llave distinta. Para actualizar, primero desinstala la versión anterior.
+```
+app/
+  build.gradle
+  proguard-rules.pro
+  src/main/
+    AndroidManifest.xml
+    java/app/autolauncher/   código de la app
+    res/drawable/            íconos y fondos
+    res/layout/              pantallas
+    res/mipmap-anydpi-v26/   ícono de la app
+    res/values/              textos, colores y estilos
+gradle/wrapper/              Gradle wrapper
+.github/workflows/           compilación automática
+```
 
 ## Cómo instalar en la pantalla
 
