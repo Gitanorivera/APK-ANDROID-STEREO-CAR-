@@ -29,7 +29,6 @@
     <string name="dock_home">Inicio</string>
     <string name="dock_music">Música</string>
     <string name="dock_phone">Teléfono</string>
-    <string name="dock_camera">Cámara</string>
     <string name="dock_eq">Ecualizador</string>
     <string name="dock_apps">Apps</string>
     <string name="dock_settings">Ajustes</string>
