@@ -1,0 +1,7 @@
+# Un nombre de paquete por línea. Cesar decide cuáles; nada se desactiva sin su visto bueno.
+# Obtén los nombres con 01_diagnostico.sh (salidas/.../apps_con_icono.txt).
+# NUNCA incluir: ZLink, Radio, Bluetooth, CarSet, Configuración del vehículo, Sound Effects,
+# Musica Local, cámara/AVIN, MCU, launcher de fábrica, ni paquetes com.android.* del sistema.
+#
+# Ejemplos de candidatos (confirmar nombre real y con Cesar antes de descomentar):
+# com.netflix.mediaclient

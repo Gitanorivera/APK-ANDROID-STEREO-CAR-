@@ -6,3 +6,6 @@ local.properties
 *.keystore
 *.jks
 .env
+
+# Salidas de ADB (pueden incluir datos del estéreo)
+scripts/adb/salidas/
