@@ -60,6 +60,7 @@ public class MainActivity extends Activity implements Trip.Listener {
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     private Prefs prefs;
+    private GpsReader gps;
     private MediaSessionManager sessionManager;
     private MediaController controller;
     private boolean sessionsListening;
@@ -90,7 +91,8 @@ public class MainActivity extends Activity implements Trip.Listener {
         setContentView(R.layout.activity_main);
         prefs = new Prefs(this);
         Trip.I.load(prefs);
-        sessionManager = (MediaSessionManager) getSystemService(Context.MEDIA_SESSION_SERVICE);
+        gps = new GpsReader(this, prefs);
+        sessionManager =(MediaSessionManager) getSystemService(Context.MEDIA_SESSION_SERVICE);
         bindViews();
         buildMenus();
         registerSystemReceiver();
@@ -111,7 +113,7 @@ public class MainActivity extends Activity implements Trip.Listener {
         updateShortcutLabels();
         loadSideLogo();
         attachMedia();
-        TripService.start(this);
+        gps.start();
         Trip.I.addListener(this);
         onTripUpdate();
         handler.removeCallbacks(gpsTick);
@@ -126,6 +128,7 @@ public class MainActivity extends Activity implements Trip.Listener {
         handler.removeCallbacks(progressTick);
         handler.removeCallbacks(gpsTick);
         Trip.I.removeListener(this);
+        gps.stop();
         detachMedia();
     }
 
@@ -198,7 +201,7 @@ public class MainActivity extends Activity implements Trip.Listener {
         mediaAccess.setOnClickListener(v -> openNotificationAccess());
         welcome.setOnClickListener(v -> hideWelcome());
         findViewById(R.id.speed_row).setOnClickListener(v -> {
-            if (!TripService.hasPermission(this)) requestLocation();
+            if (!GpsReader.hasPermission(this)) requestLocation();
             else showBoard(true);
         });
         gpsGrant.setOnClickListener(v -> requestLocation());
@@ -216,7 +219,7 @@ public class MainActivity extends Activity implements Trip.Listener {
         }, null);
         navBoard = addNavItem(side, R.drawable.ic_gauge, R.string.nav_board, v -> {
             showBoard(true);
-            if (!TripService.hasPermission(this)) requestLocation();
+            if (!GpsReader.hasPermission(this)) requestLocation();
         }, null);
         addNavItem(side, R.drawable.ic_car, R.string.nav_auto, v -> openSlot(Slot.AUTO), longPick(Slot.AUTO));
         addNavItem(side, R.drawable.ic_music, R.string.nav_music, v -> openSlot(Slot.MUSIC), longPick(Slot.MUSIC));
@@ -370,6 +373,7 @@ public class MainActivity extends Activity implements Trip.Listener {
                     break;
                 case Intent.ACTION_SCREEN_OFF:
                     screenOffAt = SystemClock.elapsedRealtime();
+                    gps.stop();
                     break;
                 case Intent.ACTION_SCREEN_ON:
                     if (screenOffAt > 0
@@ -409,8 +413,8 @@ public class MainActivity extends Activity implements Trip.Listener {
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results) {
         super.onRequestPermissionsResult(requestCode, permissions, results);
         if (requestCode != REQ_LOCATION) return;
-        if (TripService.hasPermission(this)) {
-            TripService.start(this);
+        if (GpsReader.hasPermission(this)) {
+            gps.start();
             showBoard(true);
         }
         onTripUpdate();
@@ -428,7 +432,7 @@ public class MainActivity extends Activity implements Trip.Listener {
     @Override
     public void onTripUpdate() {
         Trip t = Trip.I;
-        boolean perm = TripService.hasPermission(this);
+        boolean perm = GpsReader.hasPermission(this);
         boolean fix = perm && t.hasFix();
 
         statusGps.setAlpha(fix ? 1f : 0.35f);

@@ -24,8 +24,14 @@
   como HOME, ese mecanismo deja de correr.
 - **Otras posibilidades:** opción de retardo de apagado en Configuraciones de fábrica; cable ACC a
   corriente fija (descartado si con el launcher de fábrica sí se apaga).
-- **Prueba pendiente:** con Inicio Auto desinstalado, ¿la pantalla se apaga sola al quitar la
-  llave? Cesar aún no reporta el resultado.
+- **Prueba hecha (29-oct-2026):** con el launcher de fábrica como inicio, al quitar la llave la
+  pantalla sigue encendida un par de minutos y luego **se apaga sola**. El cable ACC está bien y
+  el estéreo sí sabe suspenderse: lo que falla es reemplazar el inicio de fábrica.
+- **ADB no disponible por ahora (29-oct-2026):** el estéreo tiene "Depuración por USB" pero
+  **no** tiene "ADB por red" en Opciones del programador (revisadas todas las secciones, incluida
+  *Redes*). El puerto 5555 está cerrado. Por cable USB-A la laptop no detecta nada (el puerto es
+  solo *host*). Pendiente revisar, solo con fotos, si *Configuraciones de fábrica* tiene modo USB
+  o ADB.
 - **Cómo investigarlo con ADB** (con el coche encendido y mirando la pantalla):
   - `adb shell cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.HOME`
     da el launcher de fábrica.

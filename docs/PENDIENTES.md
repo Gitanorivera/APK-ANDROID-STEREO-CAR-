@@ -2,10 +2,14 @@
 
 ## 1. Resolver la suspensión (bloquea todo lo demás)
 
-- [ ] Confirmar con Cesar: con el launcher de fábrica, ¿la pantalla se apaga al quitar la llave?
+- [x] Confirmar con Cesar: con el launcher de fábrica, ¿la pantalla se apaga al quitar la llave?
+      **Sí**, un par de minutos después (29-oct-2026).
 - [ ] Con ADB: identificar el launcher de fábrica y cómo el estéreo detecta ACC off
       (ver "Cómo investigarlo" en `HALLAZGOS.md`).
-- [ ] Decidir la estrategia según lo que se encuentre:
+- [x] **Hecho en el código (29-oct-2026):** se quitaron `HOME` y `DEFAULT` del manifiesto. Inicio
+      Auto se abre como app normal y el inicio de fábrica sigue siendo HOME. Falta compilar,
+      instalar y probar en el coche. Abrirlo solo al encender queda como mejora futura.
+- [ ] (Referencia) estrategias que se evaluaron:
   - Si el launcher de fábrica maneja la suspensión, Inicio Auto **no** reemplaza HOME. Se abre como
     app al encender (por ejemplo con un receiver de `BOOT_COMPLETED` o del evento de encendido del
     estéreo) y el inicio de fábrica sigue siendo HOME.
@@ -14,10 +18,11 @@
 
 ## 2. Corregir riesgos de la versión 2 antes de reinstalar
 
-- [ ] **Quitar `TripService`** (servicio en primer plano con GPS continuo). Podría impedir que el
-      estéreo se duerma. El GPS se lee solo mientras el launcher está en pantalla
-      (`onResume`/`onPause`) y se suelta en `ACTION_SCREEN_OFF`.
-- [ ] Quitar los permisos `FOREGROUND_SERVICE*` del manifiesto.
+- [x] **Quitar `TripService`** (servicio en primer plano con GPS continuo). Reemplazado por
+      `GpsReader`: el GPS se lee solo mientras el launcher está en pantalla
+      (`onResume`/`onPause`) y se suelta en `ACTION_SCREEN_OFF` (29-oct-2026). Consecuencia: los
+      km no se cuentan mientras estás en ZLink.
+- [x] Quitar los permisos `FOREGROUND_SERVICE*` del manifiesto.
 - [ ] Revisar que nada use `FLAG_KEEP_SCREEN_ON` ni wake locks.
 
 ## 3. Firma fija para poder actualizar sin desinstalar
