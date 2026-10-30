@@ -19,9 +19,9 @@ Launcher para pantallas Android de auto a 1024×600, con el diseño final (opci�
 |---|---|
 | Internet | **Sin permiso de internet**, bloqueado de forma explícita en el manifiesto. La app no puede enviar nada fuera de la pantalla. |
 | Dependencias | **Ninguna librería de terceros.** Solo usa el código de Android, así que no hay código ajeno escondido. |
-| Permisos | `ACCESS_WIFI_STATE` y `BLUETOOTH`, para mostrar si están encendidos. **Ubicación (GPS)**, para velocidad, distancia y altitud: no se guarda ninguna coordenada, solo los totales del viaje. Un servicio con aviso fijo sigue midiendo el viaje mientras usas ZLink. |
+| Permisos | `ACCESS_WIFI_STATE` y `BLUETOOTH`, para mostrar si están encendidos. **Ubicación (GPS)**, para velocidad, distancia y altitud: no se guarda ninguna coordenada, solo los totales del viaje. El GPS se lee **solo mientras Inicio Auto está en pantalla**: sin servicios en segundo plano, para no impedir que el estéreo se duerma. |
 | Acceso a notificaciones | Android lo exige para leer qué canción suena. El servicio está vacío: **no lee ni guarda notificaciones**. |
-| Componentes | Solo la pantalla de inicio está abierta al sistema, porque así funciona un launcher. Ajustes y el cajón de apps son internos. El servicio de música solo acepta conexiones del sistema. |
+| Componentes | Solo la pantalla principal está abierta al sistema, para poder abrirla desde su ícono. Ajustes y el cajón de apps son internos. El servicio de música solo acepta conexiones del sistema. |
 | Datos | Se guardan en la memoria privada de la app y **sin respaldo** (`allowBackup=false`). |
 | Nombre | Se valida: solo letras, espacios, punto, apóstrofo y guion, con un máximo de 30 caracteres. |
 | Logotipo | Se limita a 10 MB, se reduce a 512 px y se vuelve a guardar como PNG. No se conserva nada del archivo original. |
@@ -57,14 +57,17 @@ gradle/wrapper/              Gradle wrapper
 
 1. Copia el APK a una memoria USB y conéctala a la pantalla.
 2. Ábrelo con el explorador de archivos. Si lo pide, permite "instalar apps de origen desconocido".
-3. Presiona el botón **Inicio**, elige **Inicio Auto** y luego **Siempre**.
+3. Abre **Inicio Auto** desde su ícono en el cajón de apps. **No** reemplaza al inicio de fábrica:
+   ese es el que apaga la pantalla al quitar la llave (ver `docs/ERRORES.md` #1).
 4. Toca **"Permitir mostrar la canción"** y activa *Inicio Auto · canción en pantalla*.
 5. Toca el botón de Android Auto y elige **ZLink**.
 6. En *Ajustes*, escribe tu nombre si quieres y elige tu logotipo.
 
-### Para volver al launcher original
+### Si tenías la versión 1 como inicio
 
-Entra a *Ajustes de Android → Apps → Apps predeterminadas → App de inicio* y elige el original. También puedes desinstalar Inicio Auto.
+La versión 1 se podía elegir como app de inicio y eso dejaba la pantalla encendida con la llave
+quitada. Antes de instalar esta versión, entra a *Ajustes de Android → Apps → Apps predeterminadas
+→ App de inicio*, elige el original y desinstala la versión anterior (la firma cambió).
 
 ## Notas sobre tu pantalla
 
