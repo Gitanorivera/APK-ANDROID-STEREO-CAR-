@@ -15,5 +15,6 @@ kill "$(cat "$OUT/.pid")" 2>/dev/null || true; rm -f "$OUT/.pid"
 sh_ dumpsys power > "$OUT/power_despues.txt" || echo "(sin conexión: el estéreo pudo haberse dormido)" > "$OUT/power_despues.txt"
 
 echo "Posibles pistas (ACC, sleep, suspend, standby, screen):"
-grep -iE "acc|sleep|suspend|standby|screen_off|goToSleep|wakelock" "$OUT/logcat.txt" | head -60 || true
+# "acc" solo como palabra o con _ (ACC_OFF, acc_on), no dentro de "access" o "account".
+grep -iE "(^|[^a-z])acc([^a-z]|$)|acc_|sleep|suspend|standby|screen_off|goToSleep|wakelock" "$OUT/logcat.txt" | head -60 || true
 echo "Guardado en $OUT"
