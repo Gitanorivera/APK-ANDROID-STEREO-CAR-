@@ -19,7 +19,7 @@ Launcher para pantallas Android de auto a 1024×600, con el diseño final (opci�
 |---|---|
 | Internet | **Sin permiso de internet**, bloqueado de forma explícita en el manifiesto. La app no puede enviar nada fuera de la pantalla. |
 | Dependencias | **Ninguna librería de terceros.** Solo usa el código de Android, así que no hay código ajeno escondido. |
-| Permisos | `ACCESS_WIFI_STATE` y `BLUETOOTH`, para mostrar si están encendidos. **Ubicación (GPS)**, para velocidad, distancia y altitud: no se guarda ninguna coordenada, solo los totales del viaje. Un servicio con aviso fijo sigue midiendo el viaje mientras usas ZLink. |
+| Permisos | `ACCESS_WIFI_STATE` y `BLUETOOTH`, para mostrar si están encendidos. **Ubicación (GPS)**, para velocidad, distancia y altitud: no se guarda ninguna coordenada, solo los totales del viaje. El GPS se lee **solo con el inicio en pantalla** (sin servicio en segundo plano), para no impedir que el estéreo se duerma. |
 | Acceso a notificaciones | Android lo exige para leer qué canción suena. El servicio está vacío: **no lee ni guarda notificaciones**. |
 | Componentes | Solo la pantalla de inicio está abierta al sistema, porque así funciona un launcher. Ajustes y el cajón de apps son internos. El servicio de música solo acepta conexiones del sistema. |
 | Datos | Se guardan en la memoria privada de la app y **sin respaldo** (`allowBackup=false`). |
@@ -27,12 +27,21 @@ Launcher para pantallas Android de auto a 1024×600, con el diseño final (opci�
 | Logotipo | Se limita a 10 MB, se reduce a 512 px y se vuelve a guardar como PNG. No se conserva nada del archivo original. |
 | Compilación | La versión release no es depurable y el código va reducido y ofuscado con R8. |
 
-**Riesgo pendiente:** la versión release se firma con la llave de depuración de quien compila. Para uso personal está bien. Si algún día la distribuyes, crea tu propio keystore y cambia `signingConfig` en `app/build.gradle`.
+**Firma:** si el repositorio tiene los secretos de la llave fija (ver abajo), la versión de `main` se firma con ella y cada versión nueva se instala encima de la anterior. Sin esos secretos se firma con la llave de depuración de quien compila, y hay que desinstalar antes de instalar.
+
+### Configurar la firma fija (una sola vez)
+
+1. En tu computadora, **fuera de la carpeta del repositorio**, crea la llave (te pedirá contraseñas; guárdalas en tu gestor de contraseñas):
+   `keytool -genkeypair -v -keystore inicio-auto.jks -alias inicio-auto -keyalg RSA -keysize 4096 -validity 10000`
+2. Conviértela a texto: `base64 -w0 inicio-auto.jks > llave.txt` (en macOS: `base64 -i inicio-auto.jks -o llave.txt`).
+3. En GitHub: *Settings → Secrets and variables → Actions → New repository secret*, crea `KEYSTORE_BASE64` (contenido de `llave.txt`), `KEYSTORE_PASSWORD`, `KEY_ALIAS` (`inicio-auto`) y `KEY_PASSWORD`.
+4. Borra `llave.txt` y respalda `inicio-auto.jks` en un lugar seguro: **si pierdes la llave, no podrás actualizar la app sin desinstalarla.**
+5. La primera versión con la llave nueva requiere desinstalar la anterior una última vez.
 
 ## Cómo compilar
 
 Cada cambio que llega a `main` se compila solo en GitHub Actions ("Compilar APK").
-Para descargar el APK: pestaña **Actions** → la compilación más reciente en verde → **Artifacts** → **InicioAuto-apk**.
+Para descargar el APK: pestaña **Actions** → la compilación más reciente en verde → **Artifacts** → **InicioAuto-apk**. La versión (por ejemplo 2.37) es el número de esa compilación.
 
 También se puede abrir la carpeta en Android Studio y compilar con `./gradlew assembleRelease`.
 

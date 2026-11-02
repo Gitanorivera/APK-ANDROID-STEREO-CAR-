@@ -36,8 +36,10 @@ Lee primero, en este orden:
 - Compila solo en GitHub Actions (`.github/workflows/compilar.yml`) en cada push a `main` y en
   cada pull request. El APK sale en **Actions → Artifacts → InicioAuto-apk**.
 - Local: `./gradlew assembleRelease` (requiere Android SDK; con Android Studio basta).
-- El release se firma con la llave de depuración de quien compila. **Cada máquina tiene una llave
-  distinta**, por eso la v2 no se pudo instalar encima de la v1. Ver `docs/PENDIENTES.md`.
+- Firma: con los secretos `KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_ALIAS` y `KEY_PASSWORD`, el
+  workflow firma `main` con la llave fija; sin ellos (y en pull requests) usa la llave de depuración,
+  que **cambia en cada máquina**. Nunca subas el `.jks` ni contraseñas. Ver README, "Configurar la firma fija".
+- `versionCode` = número de compilación de GitHub Actions (`GITHUB_RUN_NUMBER`).
 - Diseños aprobados: mockup en el canvas de Claude ("Launcher auto 1024×600"), fila **V2**
   (menú lateral con texto, color cian, tablero GPS). Ya está implementado en el código actual.
 
