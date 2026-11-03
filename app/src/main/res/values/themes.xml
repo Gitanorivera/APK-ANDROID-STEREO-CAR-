@@ -1,62 +1,64 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="AppTheme" parent="android:Theme.Material.NoActionBar">
-        <item name="android:windowBackground">@color/bg</item>
-        <item name="android:statusBarColor">@color/bg</item>
-        <item name="android:navigationBarColor">@color/bg</item>
+        <item name="android:windowBackground">@drawable/bg_screen</item>
+        <item name="android:statusBarColor">@color/bg_top</item>
+        <item name="android:navigationBarColor">@color/bg_bottom</item>
         <item name="android:colorAccent">@color/accent</item>
         <item name="android:windowShowWallpaper">false</item>
+        <item name="android:textColor">@color/text</item>
     </style>
 
-    <style name="StatusText">
+    <!-- Tipografía del sistema (Roboto): sin descargar fuentes ni agregar archivos. -->
+    <style name="Label">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:textSize">14sp</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:letterSpacing">0.03</item>
+        <item name="android:textColor">@color/text2</item>
+        <item name="android:maxLines">1</item>
+    </style>
+
+    <style name="Value">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">34sp</item>
+        <item name="android:fontFamily">sans-serif-light</item>
+        <item name="android:textColor">@color/text</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:fontFeatureSettings">tnum</item>
+        <item name="android:maxLines">1</item>
+    </style>
+
+    <style name="Unit">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginStart">5dp</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textColor">@color/text2</item>
+    </style>
+
+    <style name="Title">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">20sp</item>
         <item name="android:textStyle">bold</item>
-        <item name="android:textColor">@color/text3</item>
-        <item name="android:drawablePadding">6dp</item>
-        <item name="android:drawableTint">@color/text3</item>
-        <item name="android:gravity">center_vertical</item>
+        <item name="android:textColor">@color/text</item>
     </style>
 
     <style name="RoundButton">
         <item name="android:scaleType">center</item>
         <item name="android:tint">@color/text</item>
         <item name="android:background">@drawable/bg_circle_dark</item>
+        <item name="android:stateListAnimator">@animator/press</item>
     </style>
 
-    <style name="CardLabel">
-        <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:textSize">11sp</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:letterSpacing">0.14</item>
-        <item name="android:textColor">@color/text3</item>
-        <item name="android:maxLines">1</item>
-    </style>
-
-    <style name="StatValue">
-        <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:textSize">28sp</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:textColor">@color/text</item>
-        <item name="android:maxLines">1</item>
-    </style>
-
-    <style name="StatUnit">
-        <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:layout_marginStart">5dp</item>
-        <item name="android:textSize">13sp</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:textColor">@color/text2</item>
-    </style>
-
-    <style name="HeaderIcon">
-        <item name="android:layout_width">20dp</item>
-        <item name="android:layout_height">20dp</item>
-        <item name="android:layout_marginStart">16dp</item>
-        <item name="android:tint">@color/text3</item>
+    <style name="StatusIcon">
+        <item name="android:layout_width">18dp</item>
+        <item name="android:layout_height">18dp</item>
+        <item name="android:layout_marginStart">14dp</item>
+        <item name="android:tint">@color/text</item>
     </style>
 </resources>

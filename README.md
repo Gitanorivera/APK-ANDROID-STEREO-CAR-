@@ -1,8 +1,13 @@
 # Inicio Auto
 
-Launcher para pantallas Android de auto a 1024×600, con el diseño final (opción A con reloj grande y el botón de Android Auto de la opción B).
+Launcher para pantallas Android de auto a 1024×600, con el **diseño premium**: tarjetas de vidrio sobre azul noche, acento cian y modo noche automático.
 
-## Qué hace (versión 2)
+## Qué hace (versión 3)
+
+- **Diseño premium:** menú lateral de vidrio, reloj grande, botón de Android Auto con brillo, tarjeta de música cuyo resplandor toma el color de la portada, y accesos rápidos con chips de color.
+- **Modo noche automático** (19:00 a 7:00): menos brillo y sin destellos para no deslumbrar. Se puede apagar en Ajustes.
+- **Bienvenida fija:** se queda en pantalla hasta que tocas **Inicio** o cualquier parte de la pantalla.
+- Los botones responden al tocarlos (se encogen un poco). Todo usa fuentes del sistema y nada de desenfoque, para que vaya fluido en el estéreo.
 
 - **Menú lateral:** INICIO, TABLERO, ANDROID AUTO, MÚSICA, TELÉFONO, APPS y AJUSTES.
 - **Inicio:** hora grande con fecha, velocidad GPS, botón de Android Auto y reproductor.
@@ -10,7 +15,7 @@ Launcher para pantallas Android de auto a 1024×600, con el diseño final (opci�
 - **Tablero:** velocímetro, viaje actual (distancia y tiempo), velocidad promedio y máxima, y altitud. Todo sale del GPS del estéreo.
 - **Botones asignados solos:** el launcher busca ZLINK, Musica Local, Bluetooth, Radio, Sound Effects y Configuración del vehículo. Para cambiar la app de un botón, mantenlo presionado.
 - **Música con ZLink:** si ZLink no publica la canción, los botones mandan la señal directo a ZLink. Se puede cambiar en Ajustes.
-- **Bienvenida al encender:** nombre opcional y editable, con tu logotipo.
+- **Bienvenida al encender:** nombre opcional y editable, con tu logotipo. Se queda hasta que la tocas.
 - **Borrar mis datos:** quita nombre, logotipo, accesos y totales del viaje, por ejemplo antes de vender el auto.
 
 ## Seguridad y privacidad

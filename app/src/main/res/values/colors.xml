@@ -1,14 +1,52 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Paleta premium, modo día. La de noche está en values-night/colors.xml. -->
 <resources>
-    <color name="bg">#07090B</color>
-    <color name="bg_main">#07090B</color>
-    <color name="card">#0F1317</color>
-    <color name="line">#1B2229</color>
-    <color name="active">#11171C</color>
-    <color name="text">#E8ECEF</color>
-    <color name="text2">#AEB7C0</color>
-    <color name="text3">#8B95A0</color>
-    <color name="dock_text">#AEB7C0</color>
-    <color name="ok">#34D399</color>
-    <color name="accent">#22D3EE</color>
+    <color name="bg">#070B14</color>
+    <color name="bg_top">#0C1626</color>
+    <color name="bg_bottom">#070B14</color>
+    <color name="glow_cyan">#3345D8F6</color>
+    <color name="glow_blue">#294C6EF5</color>
+    <color name="glow_none">#00000000</color>
+
+    <color name="text">#EEF4FA</color>
+    <color name="text2">#A8D6E2EE</color>
+    <color name="text3">#94D6E2EE</color>
+    <color name="clock">#F4F8FC</color>
+    <color name="dock_text">#A8D6E2EE</color>
+    <color name="ok">#4ADE9B</color>
+    <color name="max">#F0A35A</color>
+    <color name="accent">#45D8F6</color>
+
+    <color name="glass_top">#16FFFFFF</color>
+    <color name="glass_bottom">#08FFFFFF</color>
+    <color name="glass_pressed">#26FFFFFF</color>
+    <color name="line">#1AFFFFFF</color>
+    <color name="pill">#0FFFFFFF</color>
+    <color name="track">#1AFFFFFF</color>
+    <color name="tick_major">#8CD6E2EE</color>
+    <color name="tick_minor">#40D6E2EE</color>
+    <color name="gauge_dot">#0C1626</color>
+
+    <color name="play_top">#FFFFFF</color>
+    <color name="play_bottom">#DCE6EF</color>
+    <color name="play_icon">#0A1424</color>
+
+    <color name="chip_icon">#FFFFFF</color>
+    <color name="chip_radio_a">#F5B25A</color>
+    <color name="chip_radio_b">#D9772F</color>
+    <color name="chip_bt_a">#5AA8FF</color>
+    <color name="chip_bt_b">#2E6BEA</color>
+    <color name="chip_eq_a">#3FDCC8</color>
+    <color name="chip_eq_b">#139C9A</color>
+    <color name="chip_car_a">#8C8DFF</color>
+    <color name="chip_car_b">#5550D8</color>
+
+    <color name="music_glow">#4D6366F1</color>
+    <color name="cover_a">#6366F1</color>
+    <color name="cover_b">#22B8E6</color>
+    <color name="welcome_glow">#4245D8F6</color>
+    <color name="horizon">#8C45D8F6</color>
+    <color name="glow_cyan_0">#0045D8F6</color>
+    <color name="glow_blue_0">#004C6EF5</color>
+    <color name="welcome_glow_0">#0045D8F6</color>
 </resources>

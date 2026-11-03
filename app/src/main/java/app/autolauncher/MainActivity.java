@@ -45,13 +45,7 @@ public class MainActivity extends Activity implements Trip.Listener {
     private static final int REQ_PICK = 10;
     private static final int REQ_LOCATION = 11;
     private static final long WELCOME_AFTER_OFF_MS = 5 * 60 * 1000L;
-    private static final long WELCOME_DURATION_MS = 3500L;
     private static final Locale ES = new Locale("es", "MX");
-    private static final int C_TEXT = 0xFFE8ECEF;
-    private static final int C_TEXT2 = 0xFFAEB7C0;
-    private static final int C_TEXT3 = 0xFF8B95A0;
-    private static final int C_OK = 0xFF34D399;
-    private static final int C_WARN = 0xFFFFB020;
 
     /** La bienvenida se muestra una vez por arranque del sistema/proceso. */
     private static boolean sWelcomeShown;
@@ -67,6 +61,9 @@ public class MainActivity extends Activity implements Trip.Listener {
     private boolean boardVisible;
     private long screenOffAt;
     private long durationMs;
+    /** Esta pantalla se dibujó en modo noche (colores de values-night). */
+    private boolean night;
+    private int cText2, cText3, cOk, cWarn, glowDefault;
 
     private TextView clock, date, autoSub, sideStatus, homeSpeed, homeSpeedUnit, boardClock;
     private TextView title, artist, source, pos, dur, mediaAccess;
@@ -77,16 +74,30 @@ public class MainActivity extends Activity implements Trip.Listener {
     private ProgressBar progress;
     private GaugeView gauge;
     private View navHome, navBoard;
-    private View welcome, welcomeBar;
-    private TextView welcomeTitle, welcomeDate;
+    private TextView homeGreeting, homeSpeedSub, aaTitle;
+    private ImageView aaIcon, aaArrow;
+    private View aaChip, musicCard, coverBox;
+    private View welcome, welcomeLogoBox;
+    private TextView welcomeGreeting, welcomeTitle, welcomeDate, welcomeBt, welcomeGps, welcomeStart;
     private ImageView welcomeLogo;
 
     // ---------------------------------------------------------------- ciclo de vida
 
     @Override
+    protected void attachBaseContext(Context base) {
+        super.attachBaseContext(Night.wrap(base));
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        night = Night.applied(this);
+        cText2 = getColor(R.color.text2);
+        cText3 = getColor(R.color.text3);
+        cOk = getColor(R.color.ok);
+        cWarn = getColor(R.color.max);
+        glowDefault = getColor(R.color.music_glow);
         prefs = new Prefs(this);
         Trip.I.load(prefs);
         gps = new TripGps(this, prefs);
@@ -104,6 +115,7 @@ public class MainActivity extends Activity implements Trip.Listener {
     @Override
     protected void onResume() {
         super.onResume();
+        if (nightChanged()) return;
         resumed = true;
         applyAccent();
         updateClock();
@@ -141,6 +153,13 @@ public class MainActivity extends Activity implements Trip.Listener {
         super.onDestroy();
     }
 
+    /** Al pasar las 19:00 o las 7:00 se vuelve a dibujar con la otra paleta (nunca sobre la bienvenida). */
+    private boolean nightChanged() {
+        if (Night.wanted(this) == night || welcome.getVisibility() == View.VISIBLE) return false;
+        recreate();
+        return true;
+    }
+
     @Override
     public void onBackPressed() {
         // Es la pantalla de inicio: "atrás" solo cierra la bienvenida o regresa del tablero.
@@ -152,6 +171,19 @@ public class MainActivity extends Activity implements Trip.Listener {
 
     private void bindViews() {
         clock = findViewById(R.id.clock);
+        homeGreeting = findViewById(R.id.home_greeting);
+        homeSpeedSub = findViewById(R.id.home_speed_sub);
+        aaTitle = findViewById(R.id.aa_title);
+        aaIcon = findViewById(R.id.aa_icon);
+        aaArrow = findViewById(R.id.aa_arrow);
+        aaChip = findViewById(R.id.aa_chip);
+        musicCard = findViewById(R.id.music_card);
+        coverBox = findViewById(R.id.cover_box);
+        welcomeLogoBox = findViewById(R.id.welcome_logo_box);
+        welcomeGreeting = findViewById(R.id.welcome_greeting);
+        welcomeBt = findViewById(R.id.welcome_bt);
+        welcomeGps = findViewById(R.id.welcome_gps);
+        welcomeStart = findViewById(R.id.welcome_start);
         date = findViewById(R.id.date);
         boardClock = findViewById(R.id.board_clock);
         statusBt = findViewById(R.id.status_bt);
@@ -187,7 +219,6 @@ public class MainActivity extends Activity implements Trip.Listener {
         gpsState = findViewById(R.id.gps_state);
         gpsGrant = findViewById(R.id.gps_grant);
         welcome = findViewById(R.id.welcome);
-        welcomeBar = findViewById(R.id.welcome_bar);
         welcomeTitle = findViewById(R.id.welcome_title);
         welcomeDate = findViewById(R.id.welcome_date);
         welcomeLogo = findViewById(R.id.welcome_logo);
@@ -199,6 +230,7 @@ public class MainActivity extends Activity implements Trip.Listener {
         play.setOnClickListener(v -> onPlayPause());
         mediaAccess.setOnClickListener(v -> openNotificationAccess());
         welcome.setOnClickListener(v -> hideWelcome());
+        welcomeStart.setOnClickListener(v -> hideWelcome());
         findViewById(R.id.speed_row).setOnClickListener(v -> {
             if (!TripGps.hasPermission(this)) requestLocation();
             else showBoard(true);
@@ -229,10 +261,10 @@ public class MainActivity extends Activity implements Trip.Listener {
                 v -> startActivity(new Intent(this, SettingsActivity.class)), null);
 
         LinearLayout quick = findViewById(R.id.quick);
-        addQuickItem(quick, R.drawable.ic_radio, R.string.q_radio, Slot.RADIO);
-        addQuickItem(quick, R.drawable.ic_bt, R.string.q_bt, Slot.BLUETOOTH);
-        addQuickItem(quick, R.drawable.ic_eq, R.string.q_eq, Slot.EQ);
-        addQuickItem(quick, R.drawable.ic_vehicle, R.string.q_vehicle, Slot.VEHICLE);
+        addQuickItem(quick, R.drawable.ic_radio, R.drawable.bg_chip_radio, R.string.q_radio, Slot.RADIO);
+        addQuickItem(quick, R.drawable.ic_bt, R.drawable.bg_chip_bt, R.string.q_bt, Slot.BLUETOOTH);
+        addQuickItem(quick, R.drawable.ic_eq, R.drawable.bg_chip_eq, R.string.q_eq, Slot.EQ);
+        addQuickItem(quick, R.drawable.ic_vehicle, R.drawable.bg_chip_car, R.string.q_vehicle, Slot.VEHICLE);
     }
 
     private View.OnLongClickListener longPick(Slot slot) {
@@ -254,16 +286,17 @@ public class MainActivity extends Activity implements Trip.Listener {
         return item;
     }
 
-    private void addQuickItem(LinearLayout quick, int icon, int label, Slot slot) {
+    private void addQuickItem(LinearLayout quick, int icon, int chip, int label, Slot slot) {
         View item = LayoutInflater.from(this).inflate(R.layout.quick_item, quick, false);
         ((ImageView) item.findViewById(R.id.icon)).setImageResource(icon);
+        item.findViewById(R.id.chip).setBackgroundResource(chip);
         ((TextView) item.findViewById(R.id.label)).setText(label);
         item.setContentDescription(getString(label));
         item.setOnClickListener(v -> openSlot(slot));
         item.setOnLongClickListener(longPick(slot));
         if (quick.getChildCount() > 0) {
             LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) item.getLayoutParams();
-            lp.setMarginStart(dp(12));
+            lp.setMarginStart(dp(14));
             item.setLayoutParams(lp);
         }
         quick.addView(item);
@@ -283,22 +316,35 @@ public class MainActivity extends Activity implements Trip.Listener {
 
     private void styleNav(View item, boolean active, int accent) {
         if (item == null) return;
-        item.setBackgroundResource(active ? R.drawable.bg_side_active : R.drawable.bg_side_item);
-        ((ImageView) item.findViewById(R.id.icon)).setImageTintList(ColorStateList.valueOf(active ? accent : C_TEXT2));
-        ((TextView) item.findViewById(R.id.label)).setTextColor(active ? accent : C_TEXT2);
+        item.setBackground(active ? Ui.navActive(this, accent) : null);
+        ((ImageView) item.findViewById(R.id.icon)).setImageTintList(ColorStateList.valueOf(active ? accent : cText2));
+        ((TextView) item.findViewById(R.id.label)).setTextColor(active ? accent : cText2);
     }
 
     private void applyAccent() {
-        int a = prefs.accent();
+        int a = Ui.accent(prefs.accent(), night);
         ColorStateList csl = ColorStateList.valueOf(a);
-        autoButton.setBackgroundTintList(csl);
-        coverIcon.setImageTintList(csl);
+        int onA = Ui.onAccent(a, night);
+        int onSub = Ui.onAccentSub(a, night);
+
+        autoButton.setBackground(Ui.accentButton(this, a, night, 26));
+        aaChip.setBackground(Ui.accentChip(this, a, night));
+        aaIcon.setImageTintList(ColorStateList.valueOf(onA));
+        aaArrow.setImageTintList(ColorStateList.valueOf(onA));
+        aaTitle.setTextColor(onA);
+        autoSub.setTextColor(onSub);
+
+        welcomeStart.setBackground(Ui.accentButton(this, a, night, 34));
+        welcomeStart.setTextColor(onA);
+        welcomeStart.setCompoundDrawableTintList(ColorStateList.valueOf(onA));
+        welcomeGreeting.setTextColor(a);
+
         sourceDot.setBackgroundTintList(csl);
-        welcomeBar.setBackgroundTintList(csl);
         progress.setProgressTintList(csl);
-        gauge.setAccent(a);
+        gauge.setAccent(a, night);
         styleNav(navHome, !boardVisible, a);
         styleNav(navBoard, boardVisible, a);
+        renderMedia();
     }
 
     private void loadSideLogo() {
@@ -330,7 +376,19 @@ public class MainActivity extends Activity implements Trip.Listener {
         String time = new SimpleDateFormat(is24 ? "HH:mm" : "h:mm", ES).format(now);
         clock.setText(time);
         boardClock.setText(time);
-        date.setText(new SimpleDateFormat("EEEE d 'de' MMMM", ES).format(now).toUpperCase(ES));
+        date.setText(capitalize(new SimpleDateFormat("EEEE d 'de' MMMM", ES).format(now)));
+        homeGreeting.setText(greetingNow());
+    }
+
+    private String greetingNow() {
+        int h = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
+        return getString(h < 12 ? R.string.good_morning
+                : h < 19 ? R.string.good_afternoon : R.string.good_evening);
+    }
+
+    private static String capitalize(String s) {
+        if (s == null || s.isEmpty()) return "";
+        return s.substring(0, 1).toUpperCase(ES) + s.substring(1).toLowerCase(ES);
     }
 
     private void updateStatus() {
@@ -347,8 +405,11 @@ public class MainActivity extends Activity implements Trip.Listener {
         statusBt.setAlpha(btOn ? 1f : 0.35f);
         sideStatus.setVisibility(btKnown ? View.VISIBLE : View.GONE);
         sideStatus.setText(btOn ? R.string.bt_on_status : R.string.bt_off_status);
-        sideStatus.setTextColor(btOn ? C_OK : C_TEXT3);
-        sideStatus.setCompoundDrawableTintList(ColorStateList.valueOf(btOn ? C_OK : C_TEXT3));
+        sideStatus.setTextColor(btOn ? cOk : cText3);
+        sideStatus.setCompoundDrawableTintList(ColorStateList.valueOf(btOn ? cOk : cText3));
+        welcomeBt.setVisibility(btKnown ? View.VISIBLE : View.GONE);
+        welcomeBt.setText(btOn ? R.string.welcome_bt_on : R.string.welcome_bt_off);
+        welcomeBt.setCompoundDrawableTintList(ColorStateList.valueOf(btOn ? cOk : cText3));
 
         try {
             WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
@@ -369,6 +430,7 @@ public class MainActivity extends Activity implements Trip.Listener {
                 case Intent.ACTION_TIME_CHANGED:
                 case Intent.ACTION_TIMEZONE_CHANGED:
                     updateClock();
+                    if (resumed) nightChanged();
                     break;
                 case Intent.ACTION_SCREEN_OFF:
                     screenOffAt = SystemClock.elapsedRealtime();
@@ -436,30 +498,37 @@ public class MainActivity extends Activity implements Trip.Listener {
         boolean fix = perm && t.hasFix();
 
         statusGps.setAlpha(fix ? 1f : 0.35f);
+        welcomeGps.setText(perm ? R.string.welcome_gps_on : R.string.welcome_gps_off);
+        welcomeGps.setCompoundDrawableTintList(ColorStateList.valueOf(perm ? cOk : cText3));
+        String dist = String.format(Locale.US, "%.1f", t.distanceM / 1000.0);
         if (!perm) {
             homeSpeed.setText(R.string.tap_gps);
-            homeSpeed.setTextSize(14);
+            homeSpeed.setTextSize(15);
             homeSpeedUnit.setVisibility(View.GONE);
+            homeSpeedSub.setVisibility(View.GONE);
         } else {
             homeSpeed.setText(fix ? String.valueOf(Math.round(t.speedKmh)) : "--");
-            homeSpeed.setTextSize(22);
+            homeSpeed.setTextSize(30);
             homeSpeedUnit.setVisibility(View.VISIBLE);
+            String heading = fix && t.hasBearing ? capitalize(Trip.heading(t.bearing)) + " · " : "";
+            homeSpeedSub.setText(heading + dist + " km");
+            homeSpeedSub.setVisibility(View.VISIBLE);
         }
         if (!boardVisible) return;
 
         String sub = !perm ? "GPS SIN PERMISO" : !fix ? "BUSCANDO SEÑAL"
                 : t.hasBearing ? Trip.heading(t.bearing) : "";
-        gauge.setSpeed(fix ? t.speedKmh : -1f, sub);
+        gauge.setSpeed(fix ? t.speedKmh : -1f, t.maxKmh, sub);
         gauge.setContentDescription(fix ? "Velocidad " + Math.round(t.speedKmh) + " kilómetros por hora" : sub);
 
-        tripDist.setText(String.format(Locale.US, "%.1f", t.distanceM / 1000.0));
+        tripDist.setText(dist);
         long min = t.movingMs / 60_000;
-        tripTime.setText(String.format(Locale.US, "Tiempo: %02d:%02d h", min / 60, min % 60));
+        tripTime.setText(getString(R.string.trip_time_fmt, min / 60, min % 60));
         tripAvg.setText(String.valueOf(Math.round(t.avgKmh())));
         tripMax.setText(String.valueOf(Math.round(t.maxKmh)));
         tripAlt.setText(fix && t.hasAltitude ? String.format(Locale.US, "%,d", Math.round(t.altitudeM)) : "--");
 
-        int dot = !perm ? C_TEXT3 : fix ? C_OK : C_WARN;
+        int dot = !perm ? cText3 : fix ? cOk : cWarn;
         gpsState.setText(!perm ? R.string.gps_off : fix ? R.string.gps_ok : R.string.gps_search);
         gpsState.setCompoundDrawableTintList(ColorStateList.valueOf(dot));
         gpsGrant.setVisibility(perm ? View.GONE : View.VISIBLE);
@@ -467,36 +536,37 @@ public class MainActivity extends Activity implements Trip.Listener {
 
     // ---------------------------------------------------------------- bienvenida
 
-    private final Runnable hideWelcomeRunnable = this::hideWelcome;
-
+    /** La bienvenida se queda fija hasta tocar la pantalla o el botón "Inicio". */
     private void showWelcome() {
         if (!prefs.welcomeEnabled()) return;
-        int h = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
-        String greeting = getString(h < 12 ? R.string.good_morning
-                : h < 19 ? R.string.good_afternoon : R.string.good_evening);
+        String greeting = greetingNow();
         String name = prefs.name();
-        welcomeTitle.setText(name.isEmpty() ? greeting : getString(R.string.greeting_fmt, greeting, name));
+        // Con nombre: saludo pequeño arriba y el nombre en grande. Sin nombre: el saludo en grande.
+        welcomeGreeting.setText(greeting);
+        welcomeGreeting.setVisibility(name.isEmpty() ? View.GONE : View.VISIBLE);
+        welcomeTitle.setText(name.isEmpty() ? greeting : name);
 
         updateClock();
         welcomeDate.setText(clock.getText() + " · " + date.getText());
+        updateStatus();
+        onTripUpdate();
 
         Bitmap logo = LogoStore.load(this);
         if (logo != null) {
             welcomeLogo.setImageBitmap(logo);
-            welcomeLogo.setVisibility(View.VISIBLE);
+            welcomeLogoBox.setVisibility(View.VISIBLE);
         } else {
             welcomeLogo.setImageDrawable(null);
-            welcomeLogo.setVisibility(View.GONE);
+            welcomeLogoBox.setVisibility(View.GONE);
         }
         welcome.setVisibility(View.VISIBLE);
-        handler.removeCallbacks(hideWelcomeRunnable);
-        handler.postDelayed(hideWelcomeRunnable, WELCOME_DURATION_MS);
     }
 
     private void hideWelcome() {
-        handler.removeCallbacks(hideWelcomeRunnable);
+        if (welcome.getVisibility() != View.VISIBLE) return;
         welcome.setVisibility(View.GONE);
         welcomeLogo.setImageDrawable(null);
+        if (resumed) nightChanged();
     }
 
     // ---------------------------------------------------------------- accesos directos
@@ -650,9 +720,11 @@ public class MainActivity extends Activity implements Trip.Listener {
             boolean zlink = prefs.shortcut(Slot.AUTO) != null;
             title.setText(zlink ? getString(R.string.zlink_title) : getString(R.string.no_media_title));
             artist.setText(R.string.no_media_sub);
-            source.setText(zlink ? "ANDROID AUTO" : getString(R.string.source_none).toUpperCase(ES));
+            source.setText(zlink ? getString(R.string.auto_title) : getString(R.string.source_none));
             art.setImageDrawable(null);
             art.setVisibility(View.GONE);
+            styleCover(false);
+            setMusicGlow(glowDefault);
             progressGroup.setVisibility(View.INVISIBLE);
             setPlayIcon(false);
             return;
@@ -677,15 +749,18 @@ public class MainActivity extends Activity implements Trip.Listener {
         artist.setText(TextUtils.isEmpty(a) ? "" : a);
 
         CharSequence app = Launch.label(this, controller.getPackageName());
-        source.setText(app == null ? getString(R.string.source_none).toUpperCase(ES)
-                : app.toString().toUpperCase(ES));
+        source.setText(app == null ? getString(R.string.source_none) : app);
 
+        styleCover(true);
         if (bmp != null) {
             art.setImageBitmap(bmp);
             art.setVisibility(View.VISIBLE);
+            int avg = Ui.averageColor(bmp);
+            setMusicGlow(avg == 0 ? glowDefault : Ui.alpha(avg, night ? 0.10f : 0.30f));
         } else {
             art.setImageDrawable(null);
             art.setVisibility(View.GONE);
+            setMusicGlow(glowDefault);
         }
 
         PlaybackState st = controller.getPlaybackState();
@@ -700,6 +775,31 @@ public class MainActivity extends Activity implements Trip.Listener {
         } else {
             progressGroup.setVisibility(View.INVISIBLE);
         }
+    }
+
+    /** Sin canción: cuadro tenue con el auto. Con canción sin portada: degradado con una nota. */
+    private void styleCover(boolean hasMedia) {
+        int a = Ui.accent(prefs.accent(), night);
+        if (hasMedia) {
+            coverBox.setBackgroundResource(R.drawable.bg_cover_gradient);
+            coverBox.setBackgroundTintList(null);
+            coverIcon.setImageResource(R.drawable.ic_music);
+            coverIcon.setImageTintList(ColorStateList.valueOf(getColor(R.color.chip_icon)));
+        } else {
+            coverBox.setBackgroundResource(R.drawable.bg_cover_empty);
+            coverBox.setBackgroundTintList(ColorStateList.valueOf(Ui.alpha(a, 0.10f)));
+            coverIcon.setImageResource(R.drawable.ic_car);
+            coverIcon.setImageTintList(ColorStateList.valueOf(a));
+        }
+    }
+
+    private Integer musicGlow;
+
+    /** Resplandor de la tarjeta de música; solo se vuelve a dibujar si cambia el color. */
+    private void setMusicGlow(int glow) {
+        if (musicGlow != null && musicGlow == glow) return;
+        musicGlow = glow;
+        musicCard.setBackground(Ui.musicCard(this, getDrawable(R.drawable.bg_glass), glow));
     }
 
     private static CharSequence firstText(CharSequence... options) {

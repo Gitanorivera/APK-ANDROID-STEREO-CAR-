@@ -40,8 +40,11 @@ Lee primero, en este orden:
   workflow firma `main` con la llave fija; sin ellos (y en pull requests) usa la llave de depuración,
   que **cambia en cada máquina**. Nunca subas el `.jks` ni contraseñas. Ver README, "Configurar la firma fija".
 - `versionCode` = número de compilación de GitHub Actions (`GITHUB_RUN_NUMBER`).
-- Diseños aprobados: mockup en el canvas de Claude ("Launcher auto 1024×600"), fila **V2**
-  (menú lateral con texto, color cian, tablero GPS). Ya está implementado en el código actual.
+- Diseño aprobado: **premium** (canvas de Claude "Inicio Auto · propuesta premium": Inicio día/noche,
+  Tablero y Bienvenida). Implementado en el código actual. Colores en `res/values/colors.xml` (día) y
+  `res/values-night/colors.xml` (noche); el modo noche lo decide `Night.java` por la hora.
+- Sin desenfoque real (Android 10 no lo soporta y el chip es lento): el "vidrio" son capas translúcidas.
+- La bienvenida no se oculta sola: se cierra con el botón "Inicio", tocando la pantalla o con Atrás.
 
 ## Cómo trabajar
 

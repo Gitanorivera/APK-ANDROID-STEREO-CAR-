@@ -8,7 +8,7 @@ import java.util.regex.Pattern;
 /** Ajustes guardados solo en la memoria privada de la app (sin respaldo en la nube). */
 final class Prefs {
 
-    static final int[] ACCENTS = {0xFF22D3EE, 0xFF34D399, 0xFFFFB020, 0xFF5AB0FF};
+    static final int[] ACCENTS = {0xFF45D8F6, 0xFF34D399, 0xFFFFB020, 0xFF5AB0FF};
     static final int MAX_NAME = 30;
 
     // Letras (incluye acentos y ñ), espacios, punto, apóstrofo y guion.
@@ -76,6 +76,15 @@ final class Prefs {
         if (!sp.getBoolean(K_PREVIEW, false)) return false;
         sp.edit().remove(K_PREVIEW).apply();
         return true;
+    }
+
+    /** Modo noche automático de 19:00 a 7:00. */
+    boolean nightAuto() {
+        return sp.getBoolean("night_auto", true);
+    }
+
+    void setNightAuto(boolean on) {
+        sp.edit().putBoolean("night_auto", on).apply();
     }
 
     /** Botones de música: mandar directo a ZLink (true) o por la vía estándar del sistema. */

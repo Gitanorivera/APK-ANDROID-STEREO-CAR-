@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Paleta premium, modo noche: menos brillo y sin destellos para no deslumbrar al manejar. -->
+<resources>
+    <color name="bg">#020408</color>
+    <color name="bg_top">#060A12</color>
+    <color name="bg_bottom">#020408</color>
+    <color name="glow_cyan">#143FB9D2</color>
+    <color name="glow_blue">#00000000</color>
+
+    <color name="text">#C3CDD7</color>
+    <color name="text2">#9EAAB8C6</color>
+    <color name="text3">#8CAAB8C6</color>
+    <color name="clock">#CDD6DF</color>
+    <color name="dock_text">#9EAAB8C6</color>
+    <color name="ok">#3BB57F</color>
+    <color name="max">#C98A4E</color>
+    <color name="accent">#3FB9D2</color>
+
+    <color name="glass_top">#0DFFFFFF</color>
+    <color name="glass_bottom">#05FFFFFF</color>
+    <color name="glass_pressed">#1AFFFFFF</color>
+    <color name="line">#12FFFFFF</color>
+    <color name="pill">#0AFFFFFF</color>
+    <color name="track">#12FFFFFF</color>
+    <color name="tick_major">#73AAB8C6</color>
+    <color name="tick_minor">#2EAAB8C6</color>
+    <color name="gauge_dot">#060A12</color>
+
+    <color name="play_top">#1AFFFFFF</color>
+    <color name="play_bottom">#14FFFFFF</color>
+    <color name="play_icon">#D3DCE4</color>
+
+    <color name="chip_icon">#D9FFFFFF</color>
+    <color name="chip_radio_a">#4DD9772F</color>
+    <color name="chip_radio_b">#4DD9772F</color>
+    <color name="chip_bt_a">#522E6BEA</color>
+    <color name="chip_bt_b">#522E6BEA</color>
+    <color name="chip_eq_a">#52139C9A</color>
+    <color name="chip_eq_b">#52139C9A</color>
+    <color name="chip_car_a">#575550D8</color>
+    <color name="chip_car_b">#575550D8</color>
+
+    <color name="music_glow">#1A3FB9D2</color>
+    <color name="cover_a">#3A3D8F</color>
+    <color name="cover_b">#16708C</color>
+    <color name="welcome_glow">#1F3FB9D2</color>
+    <color name="horizon">#4D3FB9D2</color>
+    <color name="glow_none">#00000000</color>
+    <color name="glow_cyan_0">#003FB9D2</color>
+    <color name="glow_blue_0">#00000000</color>
+    <color name="welcome_glow_0">#003FB9D2</color>
+</resources>
