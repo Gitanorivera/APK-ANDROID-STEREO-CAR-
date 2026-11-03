@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Fondo: azul noche con dos luces suaves. Se dibuja una vez; no cuesta nada al refrescar. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape><gradient android:angle="270" android:startColor="@color/bg_top" android:endColor="@color/bg_bottom"/></shape>
+    </item>
+    <item>
+        <shape><gradient android:type="radial" android:gradientRadius="110%p" android:centerX="0.8" android:centerY="0" android:startColor="@color/glow_cyan" android:endColor="@color/glow_cyan_0"/></shape>
+    </item>
+    <item>
+        <shape><gradient android:type="radial" android:gradientRadius="90%p" android:centerX="0" android:centerY="1" android:startColor="@color/glow_blue" android:endColor="@color/glow_blue_0"/></shape>
+    </item>
+</layer-list>

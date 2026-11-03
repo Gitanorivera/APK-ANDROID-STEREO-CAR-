@@ -34,11 +34,10 @@ public class SettingsActivity extends Activity {
     private static final int REQ_LOGO = 20;
     private static final int REQ_PICK = 21;
 
-    private static final int C_BG = 0xFF0B0C0E;
-    private static final int C_LINE = 0xFF23262C;
-    private static final int C_TEXT = 0xFFF2F3F5;
-    private static final int C_TEXT2 = 0xFFA3A9B2;
     private static final int C_DANGER = 0xFFFF6B6B;
+
+    // Colores de la paleta (día o noche), desde res/values y res/values-night.
+    private int cLine, cText, cText2;
 
     private Prefs prefs;
     private LinearLayout content;
@@ -50,12 +49,20 @@ public class SettingsActivity extends Activity {
     private final Map<Slot, TextView> slotValues = new EnumMap<>(Slot.class);
 
     @Override
+    protected void attachBaseContext(Context base) {
+        super.attachBaseContext(Night.wrap(base));
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        cLine = getColor(R.color.line);
+        cText = getColor(R.color.text);
+        cText2 = getColor(R.color.text2);
         prefs = new Prefs(this);
 
         ScrollView scroll = new ScrollView(this);
-        scroll.setBackgroundColor(C_BG);
+        scroll.setBackgroundResource(R.drawable.bg_screen);
         content = new LinearLayout(this);
         content.setOrientation(LinearLayout.VERTICAL);
         content.setPadding(dp(32), dp(24), dp(32), dp(48));
@@ -83,12 +90,12 @@ public class SettingsActivity extends Activity {
         LinearLayout row = hRow();
         ImageButton back = new ImageButton(this);
         back.setImageResource(R.drawable.ic_back);
-        back.setImageTintList(android.content.res.ColorStateList.valueOf(C_TEXT));
+        back.setImageTintList(android.content.res.ColorStateList.valueOf(cText));
         back.setBackgroundResource(R.drawable.bg_circle_dark);
         back.setContentDescription(getString(R.string.back));
         back.setOnClickListener(v -> finish());
         row.addView(back, new LinearLayout.LayoutParams(dp(56), dp(56)));
-        TextView t = text("Ajustes del inicio", 28, C_TEXT, true);
+        TextView t = text("Ajustes del inicio", 28, cText, true);
         LinearLayout.LayoutParams lp = wrap();
         lp.leftMargin = dp(18);
         row.addView(t, lp);
@@ -102,8 +109,8 @@ public class SettingsActivity extends Activity {
         nameInput = new EditText(this);
         nameInput.setSingleLine(true);
         nameInput.setHint("Nombre (opcional)");
-        nameInput.setHintTextColor(0xFF6B7280);
-        nameInput.setTextColor(C_TEXT);
+        nameInput.setHintTextColor(getColor(R.color.text3));
+        nameInput.setTextColor(cText);
         nameInput.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18);
         nameInput.setBackgroundResource(R.drawable.bg_input);
         nameInput.setPadding(dp(16), dp(12), dp(16), dp(12));
@@ -135,7 +142,7 @@ public class SettingsActivity extends Activity {
 
         welcomeSwitch = new Switch(this);
         welcomeSwitch.setText("Mostrar bienvenida al encender");
-        welcomeSwitch.setTextColor(C_TEXT);
+        welcomeSwitch.setTextColor(cText);
         welcomeSwitch.setTextSize(TypedValue.COMPLEX_UNIT_SP, 17);
         welcomeSwitch.setMinHeight(dp(56));
         welcomeSwitch.setOnCheckedChangeListener((b, on) -> prefs.setWelcomeEnabled(on));
@@ -153,7 +160,7 @@ public class SettingsActivity extends Activity {
 
     private void buildLogo() {
         section("Logotipo de la bienvenida");
-        logoStatus = text("", 15, C_TEXT2, false);
+        logoStatus = text("", 15, cText2, false);
         content.addView(logoStatus, topMargin(4));
         LinearLayout row = hRow();
         row.addView(button("Elegir imagen", v -> pickLogo()));
@@ -183,6 +190,20 @@ public class SettingsActivity extends Activity {
             swatches.addView(sw, lp);
         }
         content.addView(swatches, topMargin(12));
+
+        Switch nightSwitch = new Switch(this);
+        nightSwitch.setText("Modo noche automático (de 19:00 a 7:00)");
+        nightSwitch.setTextColor(cText);
+        nightSwitch.setTextSize(TypedValue.COMPLEX_UNIT_SP, 17);
+        nightSwitch.setChecked(prefs.nightAuto());
+        nightSwitch.setOnCheckedChangeListener((b, on) -> {
+            prefs.setNightAuto(on);
+            recreate();
+        });
+        LinearLayout.LayoutParams nlp = new LinearLayout.LayoutParams(dp(520), dp(56));
+        nlp.topMargin = dp(16);
+        content.addView(nightSwitch, nlp);
+        hint("De noche baja el brillo y los colores se vuelven tenues para no deslumbrar al manejar.");
     }
 
     private void buildShortcuts() {
@@ -191,9 +212,9 @@ public class SettingsActivity extends Activity {
         for (Slot s : Slot.values()) {
             LinearLayout row = hRow();
             row.setMinimumHeight(dp(64));
-            TextView name = text(s.label, 17, C_TEXT, true);
+            TextView name = text(s.label, 17, cText, true);
             row.addView(name, new LinearLayout.LayoutParams(dp(170), LinearLayout.LayoutParams.WRAP_CONTENT));
-            TextView value = text("", 16, C_TEXT2, false);
+            TextView value = text("", 16, cText2, false);
             slotValues.put(s, value);
             row.addView(value, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
             row.addView(button("Cambiar", v -> {
@@ -221,13 +242,13 @@ public class SettingsActivity extends Activity {
                 + "Esta app no lee tus notificaciones y no tiene internet.");
         Switch direct = new Switch(this);
         direct.setText("Mandar los botones de música directo a ZLink");
-        direct.setTextColor(C_TEXT);
+        direct.setTextColor(cText);
         direct.setTextSize(TypedValue.COMPLEX_UNIT_SP, 17);
         direct.setChecked(prefs.mediaDirect());
         direct.setOnCheckedChangeListener((b, on) -> prefs.setMediaDirect(on));
         content.addView(direct, new LinearLayout.LayoutParams(dp(520), dp(56)));
         hint("Si los botones de la pantalla no cambian la canción, prueba apagando o encendiendo esta opción.");
-        mediaStatus = text("", 15, C_TEXT2, false);
+        mediaStatus = text("", 15, cText2, false);
         content.addView(mediaStatus, topMargin(8));
         LinearLayout row = hRow();
         row.addView(button("Abrir permiso", v -> {
@@ -344,7 +365,7 @@ public class SettingsActivity extends Activity {
             GradientDrawable g = new GradientDrawable();
             g.setShape(GradientDrawable.OVAL);
             g.setColor(Prefs.ACCENTS[i]);
-            if (i == selected) g.setStroke(dp(4), C_TEXT);
+            if (i == selected) g.setStroke(dp(4), cText);
             View sw = swatches.getChildAt(i);
             sw.setBackground(g);
             sw.setSelected(i == selected);
@@ -363,17 +384,17 @@ public class SettingsActivity extends Activity {
     // ---------------------------------------------------------------- ayudantes de UI
 
     private void section(String title) {
-        TextView t = text(title, 20, C_TEXT, true);
+        TextView t = text(title, 20, cText, true);
         content.addView(t, topMargin(32));
         View line = new View(this);
-        line.setBackgroundColor(C_LINE);
+        line.setBackgroundColor(cLine);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(1));
         lp.topMargin = dp(8);
         content.addView(line, lp);
     }
 
     private void hint(String s) {
-        TextView t = text(s, 15, C_TEXT2, false);
+        TextView t = text(s, 15, cText2, false);
         t.setLineSpacing(0, 1.2f);
         content.addView(t, topMargin(10));
     }
@@ -388,7 +409,7 @@ public class SettingsActivity extends Activity {
     }
 
     private TextView button(String label, View.OnClickListener click) {
-        TextView b = text(label, 16, C_TEXT, true);
+        TextView b = text(label, 16, cText, true);
         b.setGravity(Gravity.CENTER);
         b.setBackgroundResource(R.drawable.bg_button);
         b.setPadding(dp(20), 0, dp(20), 0);

@@ -1,33 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Acceso rápido: chip de color con ícono y el nombre. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="0dp"
     android:layout_height="match_parent"
     android:layout_weight="1"
-    android:background="@drawable/bg_quick"
+    android:background="@drawable/bg_glass_tile"
     android:clickable="true"
     android:focusable="true"
     android:gravity="center_vertical"
     android:orientation="horizontal"
     android:paddingStart="16dp"
-    android:paddingEnd="10dp">
+    android:paddingEnd="12dp"
+    android:stateListAnimator="@animator/press">
 
-    <ImageView
-        android:id="@+id/icon"
-        android:layout_width="22dp"
-        android:layout_height="22dp"
-        android:importantForAccessibility="no"
-        android:tint="@color/text" />
+    <FrameLayout
+        android:id="@+id/chip"
+        android:layout_width="46dp"
+        android:layout_height="46dp">
+
+        <ImageView
+            android:id="@+id/icon"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:layout_gravity="center"
+            android:importantForAccessibility="no"
+            android:tint="@color/chip_icon" />
+    </FrameLayout>
 
     <TextView
         android:id="@+id/label"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="12dp"
+        android:layout_marginStart="14dp"
         android:layout_weight="1"
         android:ellipsize="end"
-        android:letterSpacing="0.09"
         android:maxLines="1"
         android:textColor="@color/text"
-        android:textSize="13sp"
+        android:textSize="16sp"
         android:textStyle="bold" />
 </LinearLayout>

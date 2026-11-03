@@ -1,6 +1,7 @@
 package app.autolauncher;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
@@ -44,6 +45,11 @@ public class AppsActivity extends Activity {
     private AppAdapter adapter;
     private Slot pickSlot;
     private volatile boolean destroyed;
+
+    @Override
+    protected void attachBaseContext(Context base) {
+        super.attachBaseContext(Night.wrap(base));
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
