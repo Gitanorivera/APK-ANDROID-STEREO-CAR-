@@ -2,7 +2,6 @@ package app.autolauncher;
 
 import android.Manifest;
 import android.app.Activity;
-import android.app.NotificationManager;
 import android.bluetooth.BluetoothAdapter;
 import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
@@ -18,7 +17,6 @@ import android.media.session.MediaController;
 import android.media.session.MediaSessionManager;
 import android.media.session.PlaybackState;
 import android.net.wifi.WifiManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -60,6 +58,7 @@ public class MainActivity extends Activity implements Trip.Listener {
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     private Prefs prefs;
+    private TripGps gps;
     private MediaSessionManager sessionManager;
     private MediaController controller;
     private boolean sessionsListening;
@@ -90,6 +89,7 @@ public class MainActivity extends Activity implements Trip.Listener {
         setContentView(R.layout.activity_main);
         prefs = new Prefs(this);
         Trip.I.load(prefs);
+        gps = new TripGps(this, prefs);
         sessionManager = (MediaSessionManager) getSystemService(Context.MEDIA_SESSION_SERVICE);
         bindViews();
         buildMenus();
@@ -111,7 +111,7 @@ public class MainActivity extends Activity implements Trip.Listener {
         updateShortcutLabels();
         loadSideLogo();
         attachMedia();
-        TripService.start(this);
+        gps.start(this);
         Trip.I.addListener(this);
         onTripUpdate();
         handler.removeCallbacks(gpsTick);
@@ -126,6 +126,7 @@ public class MainActivity extends Activity implements Trip.Listener {
         handler.removeCallbacks(progressTick);
         handler.removeCallbacks(gpsTick);
         Trip.I.removeListener(this);
+        gps.stop();
         detachMedia();
     }
 
@@ -135,6 +136,7 @@ public class MainActivity extends Activity implements Trip.Listener {
             unregisterReceiver(systemReceiver);
             receiverRegistered = false;
         }
+        gps.stop();
         handler.removeCallbacksAndMessages(null);
         super.onDestroy();
     }
@@ -198,7 +200,7 @@ public class MainActivity extends Activity implements Trip.Listener {
         mediaAccess.setOnClickListener(v -> openNotificationAccess());
         welcome.setOnClickListener(v -> hideWelcome());
         findViewById(R.id.speed_row).setOnClickListener(v -> {
-            if (!TripService.hasPermission(this)) requestLocation();
+            if (!TripGps.hasPermission(this)) requestLocation();
             else showBoard(true);
         });
         gpsGrant.setOnClickListener(v -> requestLocation());
@@ -216,7 +218,7 @@ public class MainActivity extends Activity implements Trip.Listener {
         }, null);
         navBoard = addNavItem(side, R.drawable.ic_gauge, R.string.nav_board, v -> {
             showBoard(true);
-            if (!TripService.hasPermission(this)) requestLocation();
+            if (!TripGps.hasPermission(this)) requestLocation();
         }, null);
         addNavItem(side, R.drawable.ic_car, R.string.nav_auto, v -> openSlot(Slot.AUTO), longPick(Slot.AUTO));
         addNavItem(side, R.drawable.ic_music, R.string.nav_music, v -> openSlot(Slot.MUSIC), longPick(Slot.MUSIC));
@@ -370,6 +372,7 @@ public class MainActivity extends Activity implements Trip.Listener {
                     break;
                 case Intent.ACTION_SCREEN_OFF:
                     screenOffAt = SystemClock.elapsedRealtime();
+                    gps.stop();
                     break;
                 case Intent.ACTION_SCREEN_ON:
                     if (screenOffAt > 0
@@ -377,6 +380,7 @@ public class MainActivity extends Activity implements Trip.Listener {
                         showWelcome();
                     }
                     screenOffAt = 0;
+                    if (resumed) gps.start(MainActivity.this);
                     break;
                 default:
                     updateStatus();
@@ -409,8 +413,8 @@ public class MainActivity extends Activity implements Trip.Listener {
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results) {
         super.onRequestPermissionsResult(requestCode, permissions, results);
         if (requestCode != REQ_LOCATION) return;
-        if (TripService.hasPermission(this)) {
-            TripService.start(this);
+        if (TripGps.hasPermission(this)) {
+            gps.start(this);
             showBoard(true);
         }
         onTripUpdate();
@@ -428,7 +432,7 @@ public class MainActivity extends Activity implements Trip.Listener {
     @Override
     public void onTripUpdate() {
         Trip t = Trip.I;
-        boolean perm = TripService.hasPermission(this);
+        boolean perm = TripGps.hasPermission(this);
         boolean fix = perm && t.hasFix();
 
         statusGps.setAlpha(fix ? 1f : 0.35f);
@@ -548,20 +552,6 @@ public class MainActivity extends Activity implements Trip.Listener {
         return new ComponentName(this, MediaListenerService.class);
     }
 
-    private boolean hasMediaAccess() {
-        ComponentName me = listenerComponent();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
-            NotificationManager nm = getSystemService(NotificationManager.class);
-            return nm != null && nm.isNotificationListenerAccessGranted(me);
-        }
-        String flat = Settings.Secure.getString(getContentResolver(), "enabled_notification_listeners");
-        if (flat == null) return false;
-        for (String part : flat.split(":")) {
-            if (me.equals(ComponentName.unflattenFromString(part))) return true;
-        }
-        return false;
-    }
-
     private void openNotificationAccess() {
         try {
             startActivity(new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS));
@@ -575,7 +565,7 @@ public class MainActivity extends Activity implements Trip.Listener {
             this::pickController;
 
     private void attachMedia() {
-        boolean access = hasMediaAccess();
+        boolean access = MediaListenerService.isEnabled(this);
         mediaAccess.setVisibility(access ? View.GONE : View.VISIBLE);
         if (sessionManager == null || !access) {
             setController(null);

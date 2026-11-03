@@ -2,6 +2,14 @@ plugins {
     id 'com.android.application'
 }
 
+// En GitHub Actions cada compilación sube el número de versión, así sabes cuál está instalada.
+def ciRun = System.getenv('GITHUB_RUN_NUMBER')
+def ciRunNumber = ciRun != null && ciRun.isInteger() ? ciRun.toInteger() : 0
+
+// Firma fija: solo si existen las variables (las pone el workflow desde los secretos de GitHub).
+// Sin ellas se usa la llave de depuración de la máquina, como antes. Nunca pongas valores aquí.
+def releaseKeystore = System.getenv('KEYSTORE_FILE')
+
 android {
     namespace 'app.autolauncher'
     compileSdk 34
@@ -10,8 +18,19 @@ android {
         applicationId 'app.autolauncher'
         minSdk 26
         targetSdk 34
-        versionCode 1
-        versionName '1.0'
+        versionCode(Math.max(1, ciRunNumber))
+        versionName(ciRunNumber > 0 ? "2.${ciRunNumber}" : '2.0-local')
+    }
+
+    signingConfigs {
+        if (releaseKeystore) {
+            release {
+                storeFile file(releaseKeystore)
+                storePassword System.getenv('KEYSTORE_PASSWORD')
+                keyAlias System.getenv('KEY_ALIAS')
+                keyPassword System.getenv('KEY_PASSWORD')
+            }
+        }
     }
 
     buildTypes {
@@ -20,8 +39,7 @@ android {
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            // Firma local para instalar en tu pantalla. Para distribuir, usa tu propio keystore.
-            signingConfig signingConfigs.debug
+            signingConfig(releaseKeystore ? signingConfigs.release : signingConfigs.debug)
         }
     }
 

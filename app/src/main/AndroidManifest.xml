@@ -13,9 +13,6 @@
     <!-- GPS para velocidad, distancia y altitud. No se guardan coordenadas. -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <!-- Para seguir midiendo el viaje mientras usas ZLink. -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
 
     <!-- Garantía: la app NO puede usar internet, aunque algo intentara agregarlo. -->
     <uses-permission
@@ -70,12 +67,6 @@
             android:name=".AppsActivity"
             android:exported="false"
             android:screenOrientation="sensorLandscape" />
-
-        <!-- Mide el viaje con el GPS. Interno: ninguna otra app puede usarlo. -->
-        <service
-            android:name=".TripService"
-            android:exported="false"
-            android:foregroundServiceType="location" />
 
         <!-- Requerido por Android para leer la canción activa. Solo el sistema puede conectarse
              (permiso BIND_NOTIFICATION_LISTENER_SERVICE). La app ignora las notificaciones. -->

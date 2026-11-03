@@ -2,15 +2,12 @@ package app.autolauncher;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.NotificationManager;
 import android.content.ActivityNotFoundException;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.text.InputFilter;
@@ -359,22 +356,8 @@ public class SettingsActivity extends Activity {
             if (v != null) v.setText(label == null ? "Sin asignar" : label);
         }
 
-        mediaStatus.setText(hasMediaAccess() ? "Permiso activo: la canción se muestra en el inicio"
+        mediaStatus.setText(MediaListenerService.isEnabled(this) ? "Permiso activo: la canción se muestra en el inicio"
                 : "Permiso apagado: los botones funcionan, pero no se ve la canción");
-    }
-
-    private boolean hasMediaAccess() {
-        ComponentName me = new ComponentName(this, MediaListenerService.class);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
-            NotificationManager nm = getSystemService(NotificationManager.class);
-            return nm != null && nm.isNotificationListenerAccessGranted(me);
-        }
-        String flat = Settings.Secure.getString(getContentResolver(), "enabled_notification_listeners");
-        if (flat == null) return false;
-        for (String part : flat.split(":")) {
-            if (me.equals(ComponentName.unflattenFromString(part))) return true;
-        }
-        return false;
     }
 
     // ---------------------------------------------------------------- ayudantes de UI

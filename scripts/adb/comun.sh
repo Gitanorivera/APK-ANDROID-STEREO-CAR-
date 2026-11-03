@@ -21,7 +21,9 @@ requiere_dispositivo() {
   fi
 }
 
-sh_() { "$ADB" shell "$@" 2>&1 | tr -d '\r'; }
+# </dev/null: sin esto, adb shell se "come" el resto de un ciclo while-read
+# y solo se procesa la primera línea (revertir o desactivar quedaban a medias).
+sh_() { "$ADB" shell "$@" </dev/null 2>&1 | tr -d '\r'; }
 
 carpeta_salida() {
   local base

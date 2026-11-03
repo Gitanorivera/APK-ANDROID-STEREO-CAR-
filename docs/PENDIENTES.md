@@ -14,17 +14,18 @@
 
 ## 2. Corregir riesgos de la versión 2 antes de reinstalar
 
-- [ ] **Quitar `TripService`** (servicio en primer plano con GPS continuo). Podría impedir que el
-      estéreo se duerma. El GPS se lee solo mientras el launcher está en pantalla
-      (`onResume`/`onPause`) y se suelta en `ACTION_SCREEN_OFF`.
-- [ ] Quitar los permisos `FOREGROUND_SERVICE*` del manifiesto.
-- [ ] Revisar que nada use `FLAG_KEEP_SCREEN_ON` ni wake locks.
+- [x] **Quitar `TripService`** (servicio en primer plano con GPS continuo). Ahora `TripGps` lee el GPS
+      solo mientras el launcher está en pantalla (`onResume`/`onPause`) y lo suelta en `ACTION_SCREEN_OFF`.
+- [x] Quitar los permisos `FOREGROUND_SERVICE*` del manifiesto.
+- [x] Revisar que nada use `FLAG_KEEP_SCREEN_ON` ni wake locks (revisado: no hay ninguno).
 
 ## 3. Firma fija para poder actualizar sin desinstalar
 
-- [ ] Crear un keystore propio, guardarlo **fuera del repo** y cargarlo como secretos de GitHub
-      (`KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`). Usarlos en el workflow
-      y en `signingConfigs` de `app/build.gradle`. Nunca subir el `.jks` ni las contraseñas.
+- [x] Workflow y `app/build.gradle` listos para usar la llave fija desde secretos de GitHub.
+- [ ] **Cesar:** crear la llave **fuera del repo** y cargar los secretos (`KEYSTORE_BASE64`,
+      `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`). Pasos en el README. Nunca subir el `.jks`
+      ni las contraseñas.
+- [x] `versionCode` automático con el número de compilación.
 - [ ] Mientras tanto: desinstalar la versión anterior antes de instalar una nueva.
 
 ## 4. Música con ZLink
